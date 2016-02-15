@@ -1,0 +1,4 @@
+
+PACKAGE = 'corto/admin'
+
+require "#{ENV['CORTO_BUILD']}/package"

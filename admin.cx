@@ -1,0 +1,7 @@
+#package /corto/admin
+
+class server::
+    int16 construct()
+    port: uint16
+    api: web/server/REST, private|local
+    content: web/server/Files, private|local
