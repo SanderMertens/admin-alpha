@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Admin - Corto</title>
     <link href='https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css' rel="stylesheet">
-    <link rel="stylesheet" type='text/css' href="https://cdnjs.cloudflare.com/ajax/libs/octicons/3.3.0/octicons.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/octicons/3.3.0/octicons.css" rel="stylesheet" type='text/css'>
     <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,300,600' rel='stylesheet' type='text/css'>
     <link href='https://fonts.googleapis.com/css?family=Source+Code+Pro:400,300' rel='stylesheet' type='text/css'>
     <link href="./css/style.css" rel="stylesheet">
@@ -31,5 +31,34 @@
         </div>
       </nav>
     </div>
+    <div id="browser" class="container-fluid">
+      <div id="scope" class="col-md-8"></div>
+      <div id="value" class="col-md-4"></div>
+    </div>
+
+    <script type="template/text" id="object">
+        <tr class="object">
+          <td class="object-id"><%- id %></td>
+          <td class="object-type"><%- type %></td>
+          <td class="object-value"><%= value %></td>
+        </tr>
+    </script>
+    
+    <script type="template/text" id="objectList">
+        <table id="scope-table">
+        <tr><th>id</th><th>type</th><th>preview</th></tr>
+        <% _.each(objects, function(item, key, list) { %>
+          <%= objectTemplate({
+            id: item.id,
+            type: item.meta.type,
+            value: corto.json.prettyPrint(item.value)}) %>
+        <% }); %>
+        </table>
+    </script>
+
+    <script src="https://code.jquery.com/jquery-1.12.0.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js"></script>
+    <script src="./js/admin.js"></script>
   </body>
 </html>

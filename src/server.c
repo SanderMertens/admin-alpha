@@ -18,10 +18,11 @@ corto_int16 _admin_server_construct(admin_server this) {
         goto error;
     }
 
-    /* Serve up static content */
+    /* Serve up static file content */
     path = corto_envparse("$CORTO_TARGET/etc/corto/%s.%s/corto/admin",
         CORTO_VERSION_MAJOR,
         CORTO_VERSION_MINOR);
+
     this->content = server_FilesCreate(this->port, "admin", path);
     if (!this->content) {
         goto error;
