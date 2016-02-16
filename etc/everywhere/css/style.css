@@ -53,6 +53,15 @@ nav.navbar-doc {
   background-color: #ccc;
   color: #21252b;
 }
+tr.object {
+  cursor: pointer;
+}
+#admin-table tr.alt {
+  background-color: #22262d;
+}
+#admin-table tr:hover {
+  background-color: #111;
+}
 
 span,td.object-id {
   color: #73cddd;
@@ -62,7 +71,6 @@ td.object-type {
 }
 
 #value {
-
 }
 
 .json-key {

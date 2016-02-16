@@ -40,28 +40,51 @@
     </div>
 
     <script type="template/text" id="object">
-        <tr class="object">
+        <tr class="object <%= alt %>" onclick="corto.updateValue('<%- JSON.stringify(value) %>')">
           <td class="object-id"><%= corto.link(corto.parent + "/" + id, id) %></td>
           <td class="object-type"><%= corto.link(type, type) %></td>
-          <td class="object-value"><%= value %></td>
+          <td class="object-value"><%= corto.json.prettyPrint(value, 50) %></td>
         </tr>
     </script>
 
     <script type="template/text" id="objectList">
       <table id="admin-table">
       <tr><th>id</th><th>type</th><th>preview</th></tr>
-      <% _.each(objects, function(item, key, list) { %>
+        <%
+        var i = 0;
+        _.each(objects, function(item, key, list) {
+          i ++;
+        %>
         <%= objectTemplate({
           id: item.id,
           type: item.meta.type,
-          value: corto.json.prettyPrint(item.value)}) %>
+          value: item.value,
+          alt: i % 2 ? "alt" : ""}) %>
       <% }); %>
       </table>
     </script>
 
+    <script type="template/text" id="property">
+      <tr><td><span class="json-key"><%= key %></span></td><td></td></tr>
+      <% if (item instanceof object) { %>
+        { ... }
+      <% } else { %>
+        <%= item %>
+      <% } %>
+      </td></tr>
+      <% if (item instanceof object) { %>
+        <% _.each(item, function(p, key, list) { %>
+          <%= property({key: key, item: p, property: property}) %>
+        <% }) %>
+      <% } %>
+    </script>
+
     <script type="template/text" id="valueTree">
       <table id="admin-table">
-      <tr><th>property</th><th>value</th></tr>
+        <tr><th>property</th><th>value</th></tr>
+        <% _.each(value, function(item, key, list) { %>
+          <%= property({key: key, item: item, property: property}) %>
+        <% }) %>
       </table>
     </script>
 

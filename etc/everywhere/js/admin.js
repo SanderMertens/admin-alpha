@@ -15,10 +15,12 @@ corto.json = {
        r = r + (pVal[0] == '"' ? str : val) + pVal + '</span>';
     return r + (pEnd || '');
     },
-  prettyPrint: function(obj) {
+  prettyPrint: function(obj, max) {
       if (obj != undefined) {
         var jsonLine = /^( *)("[\w]+": )?("[^"]*"|[\w.+-]*)?([,[{])?$/mg;
-        return JSON.stringify(obj, null, 3)
+        var str = JSON.stringify(obj, null, 3);
+        if (str.length > max) return "{ ... }";
+        return str
            .replace(/&/g, '&amp;').replace(/\\"/g, '&quot;')
            .replace(/</g, '&lt;').replace(/>/g, '&gt;')
            .replace(jsonLine, corto.json.replacer);
@@ -27,9 +29,10 @@ corto.json = {
   };
 
 // Compile templates
-var t_object = _.template($("#object").html());
 var t_objectList = _.template($("#objectList").html());
+var t_object = _.template($("#object").html());
 var t_valueTree = _.template($("#valueTree").html());
+var t_property = _.template($("#property").html());
 
 // Initialize parent to root
 corto.parent = "";
@@ -61,10 +64,15 @@ corto.linkSplitUp = function(name) {
   return result;
 }
 
+// Populate value table
+corto.updateValue = function(data) {
+  $("#value").html(t_valueTree({value: {}, property: t_property}));
+  $("#value").html(t_valueTree({value: JSON.parse(data), property: t_property}));
+}
+
 // Populate scope table
 corto.updateScope = function(data) {
   $("#scope").html(t_objectList({objects: data, objectTemplate: t_object}))
-  $("#scope tr.object:even").css("background-color", "#23272e");
 }
 
 // Set parent
@@ -87,7 +95,7 @@ $(function() {
 
 // Initialization of tables
 $("#scope").html(t_objectList({objects: [], objectTemplate: t_object}));
-$("#value").html(t_valueTree({}));
+$("#value").html(t_valueTree({value: {}, property: t_property}));
 
 // Initial request
 corto.request("");
