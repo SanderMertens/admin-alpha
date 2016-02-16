@@ -32,28 +32,37 @@
       </nav>
     </div>
     <div id="browser" class="container-fluid">
-      <div id="scope" class="col-md-8"></div>
-      <div id="value" class="col-md-4"></div>
+      <div id="navigator" class="col-md-12"></div>
+      <div id="data">
+        <div id="scope" class="col-md-8"></div>
+        <div id="value" class="col-md-4"></div>
+      </div>
     </div>
 
     <script type="template/text" id="object">
         <tr class="object">
-          <td class="object-id"><%- id %></td>
-          <td class="object-type"><%- type %></td>
+          <td class="object-id"><%= corto.link(corto.parent + "/" + id, id) %></td>
+          <td class="object-type"><%= corto.link(type, type) %></td>
           <td class="object-value"><%= value %></td>
         </tr>
     </script>
-    
+
     <script type="template/text" id="objectList">
-        <table id="scope-table">
-        <tr><th>id</th><th>type</th><th>preview</th></tr>
-        <% _.each(objects, function(item, key, list) { %>
-          <%= objectTemplate({
-            id: item.id,
-            type: item.meta.type,
-            value: corto.json.prettyPrint(item.value)}) %>
-        <% }); %>
-        </table>
+      <table id="admin-table">
+      <tr><th>id</th><th>type</th><th>preview</th></tr>
+      <% _.each(objects, function(item, key, list) { %>
+        <%= objectTemplate({
+          id: item.id,
+          type: item.meta.type,
+          value: corto.json.prettyPrint(item.value)}) %>
+      <% }); %>
+      </table>
+    </script>
+
+    <script type="template/text" id="valueTree">
+      <table id="admin-table">
+      <tr><th>property</th><th>value</th></tr>
+      </table>
     </script>
 
     <script src="https://code.jquery.com/jquery-1.12.0.min.js"></script>

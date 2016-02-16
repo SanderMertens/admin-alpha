@@ -29,26 +29,32 @@ nav.navbar-doc {
   color: #000;
 }
 
-#browser {
-  margin-top: 100px;
+#navigator {
+  font-size: 18px;
+  padding: 20px;
+  font-family: 'Source Code Pro';
 }
 
-#scope-table {
+#browser {
+  margin-top: 70px;
+}
+
+#admin-table {
   background-color: #282c34;
   border-collapse: separate;
   width: 100%;
   font-family: 'Source Code Pro';
 }
-#scope-table td,th {
+#admin-table td,th {
   padding: 10px;
   vertical-align: top;
 }
-#scope-table th {
+#admin-table th {
   background-color: #ccc;
   color: #21252b;
 }
 
-td.object-id {
+span,td.object-id {
   color: #73cddd;
 }
 td.object-type {
@@ -70,10 +76,12 @@ td.object-type {
 }
 
 a {
-  color: #61afef;
+  color: inherit;
+  cursor: pointer;
 }
 a:hover {
-  color: #d09965;
+  color: #fff;
+  text-decoration: none;
 }
 
 
