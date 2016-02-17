@@ -40,18 +40,19 @@
     </div>
 
     <script type="template/text" id="object">
-        <tr class="object <%= alt %>" onclick="corto.updateValue('<%- JSON.stringify(value) %>')">
+        <tr class="object <%= alt %>" ondblclick="corto.request(corto.parent + '/' + '<%-id%>')" onclick='corto.updateValue(<%= JSON.stringify({value: value}) %>)'>
           <td class="object-id"><%= corto.link(corto.parent + "/" + id, id) %></td>
           <td class="object-type"><%= corto.link(type, type) %></td>
-          <td class="object-value"><%= corto.json.prettyPrint(value, 50) %></td>
+          <td class="object-value"><%= corto.json.prettyPrint(value, 100) %></td>
         </tr>
     </script>
 
     <script type="template/text" id="objectList">
       <table id="admin-table">
-      <tr><th>id</th><th>type</th><th>preview</th></tr>
+      <tr><th>id</th><th>type</th><th class="object-value">preview</th></tr>
         <%
         var i = 0;
+        if (objects.length) {
         _.each(objects, function(item, key, list) {
           i ++;
         %>
@@ -60,21 +61,41 @@
           type: item.meta.type,
           value: item.value,
           alt: i % 2 ? "alt" : ""}) %>
-      <% }); %>
+      <% }); } else { %>
+          <tr class="object"><td>No objects</td><td></td><td></td></tr>
+      <% }; %>
+      </table>
+    </script>
+
+    <script type="template/text" id="objectListLoading">
+      <table id="admin-table">
+        <tr><th>id</th><th>type</th><th class="object-value">preview</th></tr>
+        <tr><td>Loading...</td><td></td><td></td></tr>
       </table>
     </script>
 
     <script type="template/text" id="property">
-      <tr><td><span class="json-key"><%= key %></span></td><td></td></tr>
-      <% if (item instanceof object) { %>
+      <tr <%if(i%2){%>class="alt"<%}%>><td>
+        <%="&nbsp;".repeat(indent?indent-1:indent)%><% if (indent) {%><%="."%><% } %><span class="json-key"><%=key%></span>
+      </td><td>
+      <% if (item instanceof Object) { %>
         { ... }
       <% } else { %>
-        <%= item %>
+        <% if (item && item.constructor === String) { %>
+          <span class="json-string">&quot;<%} else {%>
+          <span class="json-value">
+        <%}%><%= item %><% if (item && item.constructor === String) { %>&quot;<%}%>
+        </span>
       <% } %>
       </td></tr>
-      <% if (item instanceof object) { %>
-        <% _.each(item, function(p, key, list) { %>
-          <%= property({key: key, item: p, property: property}) %>
+      <% if (item instanceof Object) { %>
+        <%_.each(item, function(p, key, list) { i ++; %>
+          <%= property({
+            key: key,
+            item: p,
+            property: property,
+            indent: indent + 1,
+            i: i}) %>
         <% }) %>
       <% } %>
     </script>
@@ -82,9 +103,17 @@
     <script type="template/text" id="valueTree">
       <table id="admin-table">
         <tr><th>property</th><th>value</th></tr>
-        <% _.each(value, function(item, key, list) { %>
-          <%= property({key: key, item: item, property: property}) %>
+        <% var i = 0; 
+           _.each(value, function(item, key, list) { i ++; %>
+          <%= property({key: key, item: item, property: property, indent: 0, i: i}) %>
         <% }) %>
+      </table>
+    </script>
+
+    <script type="template/text" id="valueTreeLoading">
+      <table id="admin-table">
+        <tr><th>property</th><th>value</th></tr>
+        <tr><td>Loading...</td><td></td></tr>
       </table>
     </script>
 

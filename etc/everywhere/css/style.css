@@ -44,14 +44,17 @@ nav.navbar-doc {
   border-collapse: separate;
   width: 100%;
   font-family: 'Source Code Pro';
+  border: 2px solid #464D59;
+  margin-bottom: 20px;
 }
 #admin-table td,th {
   padding: 10px;
   vertical-align: top;
 }
 #admin-table th {
-  background-color: #ccc;
-  color: #21252b;
+  background-color: #464D59;
+  color: #eee;
+  padding: 12px;
 }
 tr.object {
   cursor: pointer;
@@ -68,6 +71,16 @@ span,td.object-id {
 }
 td.object-type {
   color: #e59bfa;
+}
+
+@media (min-width: 0px) and (max-width: 768px) {
+td.object-value,th.object-value {
+  display:none;
+  width:0;
+  height:0;
+  opacity:0;
+  visibility: collapse;
+}
 }
 
 #value {

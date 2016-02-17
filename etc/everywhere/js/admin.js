@@ -30,8 +30,10 @@ corto.json = {
 
 // Compile templates
 var t_objectList = _.template($("#objectList").html());
+var t_objectListLoading = _.template($("#objectListLoading").html());
 var t_object = _.template($("#object").html());
 var t_valueTree = _.template($("#valueTree").html());
+var t_valueTreeLoading = _.template($("#valueTreeLoading").html());
 var t_property = _.template($("#property").html());
 
 // Initialize parent to root
@@ -66,8 +68,9 @@ corto.linkSplitUp = function(name) {
 
 // Populate value table
 corto.updateValue = function(data) {
+  console.log("Update value...");
   $("#value").html(t_valueTree({value: {}, property: t_property}));
-  $("#value").html(t_valueTree({value: JSON.parse(data), property: t_property}));
+  $("#value").html(t_valueTree({value: data.value, property: t_property}));
 }
 
 // Populate scope table
@@ -83,11 +86,15 @@ corto.updateParent = function(id) {
 // Request a scope
 corto.request = function(id) {
   corto.parent = id;
-  corto.updateScope([]);
+  $("#scope").html(t_objectListLoading({}))
+  $("#value").html(t_valueTreeLoading({}))
   corto.updateParent(id);
   $.get("http://" + window.location.host +
     "/api" + id + "?select=*&meta=true&value=true",
     corto.updateScope);
+  $.get("http://" + window.location.host +
+    "/api" + id + "?value=true",
+    corto.updateValue);
 }
 
 // Document.ready
