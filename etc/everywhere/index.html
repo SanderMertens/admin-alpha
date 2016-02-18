@@ -34,20 +34,26 @@
     <div id="browser" class="container-fluid">
       <div id="navigator" class="col-md-12"></div>
       <div id="data">
-        <div id="scope" class="col-md-8"></div>
-        <div id="value" class="col-md-4"></div>
+        <div id="scope" class="col-md-7"></div>
+        <div id="value" class="col-md-5"></div>
       </div>
     </div>
 
     <script type="template/text" id="object">
         <tr class="object <%= alt %>" ondblclick="corto.request(corto.parent + '/' + '<%-id%>')" onclick='corto.updateValue(<%= JSON.stringify({value: value}) %>)'>
           <td class="object-id"><%= corto.link(corto.parent + "/" + id, id) %></td>
-          <td class="object-type"><%= corto.link(type, type) %></td>
+          <td class="object-type">
+            <% if (type.substring(0, 1) != "/") { %>
+              <%= corto.link("/corto/lang/" + type, type) %>
+            <% } else {%>
+              <%= corto.link(type, type) %>
+            <% } %>
+          </td>
           <td class="object-value"><%= corto.json.prettyPrint(value, 100) %></td>
         </tr>
     </script>
 
-    <script type="template/text" id="objectList">
+    <script type="template/text" id="objectTable">
       <table id="admin-table">
       <tr><th>id</th><th>type</th><th class="object-value">preview</th></tr>
         <%
@@ -67,7 +73,7 @@
       </table>
     </script>
 
-    <script type="template/text" id="objectListLoading">
+    <script type="template/text" id="objectTableLoading">
       <table id="admin-table">
         <tr><th>id</th><th>type</th><th class="object-value">preview</th></tr>
         <tr><td>Loading...</td><td></td><td></td></tr>
@@ -76,7 +82,16 @@
 
     <script type="template/text" id="property">
       <tr <%if(i%2){%>class="alt"<%}%>><td>
-        <%="&nbsp;".repeat(indent?indent-1:indent)%><% if (indent) {%><%="."%><% } %><span class="json-key"><%=key%></span>
+        <%="&nbsp;".repeat(indent?indent-1:indent)%>
+        <% if (indent) {
+             if (typeof(key) == "number") { %>
+               [<span class="json-key"><%=key%></span>]
+          <% } else { %>
+              .<span class="json-key"><%=key%></span>
+          <% }
+          } else {%>
+            <span class="json-key"><%=key%></span>
+        <%}%>
       </td><td>
       <% if (item instanceof Object) { %>
         { ... }
@@ -100,17 +115,25 @@
       <% } %>
     </script>
 
-    <script type="template/text" id="valueTree">
+    <script type="template/text" id="metaTable">
       <table id="admin-table">
         <tr><th>property</th><th>value</th></tr>
-        <% var i = 0; 
+        <tr><td><span class="json-key">name</span></td><td><%= name %></td></tr>
+        <tr><td><span class="json-key">type</span></td><td><%= name %></td></tr>
+      </table>
+    </script>
+
+    <script type="template/text" id="valueTable">
+      <table id="admin-table">
+        <tr><th>property</th><th>value</th></tr>
+        <% var i = 0;
            _.each(value, function(item, key, list) { i ++; %>
           <%= property({key: key, item: item, property: property, indent: 0, i: i}) %>
         <% }) %>
       </table>
     </script>
 
-    <script type="template/text" id="valueTreeLoading">
+    <script type="template/text" id="valueTableLoading">
       <table id="admin-table">
         <tr><th>property</th><th>value</th></tr>
         <tr><td>Loading...</td><td></td></tr>

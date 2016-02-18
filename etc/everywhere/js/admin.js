@@ -29,12 +29,13 @@ corto.json = {
   };
 
 // Compile templates
-var t_objectList = _.template($("#objectList").html());
-var t_objectListLoading = _.template($("#objectListLoading").html());
+var t_objectTable = _.template($("#objectTable").html());
+var t_objectTableLoading = _.template($("#objectTableLoading").html());
 var t_object = _.template($("#object").html());
-var t_valueTree = _.template($("#valueTree").html());
-var t_valueTreeLoading = _.template($("#valueTreeLoading").html());
+var t_valueTable = _.template($("#valueTable").html());
+var t_valueTableLoading = _.template($("#valueTableLoading").html());
 var t_property = _.template($("#property").html());
+var t_metaTable = _.template($("#metaTable").html());
 
 // Initialize parent to root
 corto.parent = "";
@@ -69,13 +70,13 @@ corto.linkSplitUp = function(name) {
 // Populate value table
 corto.updateValue = function(data) {
   console.log("Update value...");
-  $("#value").html(t_valueTree({value: {}, property: t_property}));
-  $("#value").html(t_valueTree({value: data.value, property: t_property}));
+  $("#value").html(t_valueTable({value: {}, property: t_property}));
+  $("#value").html(t_valueTable({value: data.value, property: t_property}));
 }
 
 // Populate scope table
 corto.updateScope = function(data) {
-  $("#scope").html(t_objectList({objects: data, objectTemplate: t_object}))
+  $("#scope").html(t_objectTable({objects: data, objectTemplate: t_object}))
 }
 
 // Set parent
@@ -86,8 +87,11 @@ corto.updateParent = function(id) {
 // Request a scope
 corto.request = function(id) {
   corto.parent = id;
-  $("#scope").html(t_objectListLoading({}))
-  $("#value").html(t_valueTreeLoading({}))
+  $("#scope").html(t_objectTableLoading({}))
+  $("#value").html(
+    t_metaTable({name: id, type: "???"}) +
+    t_valueTableLoading({})
+  )
   corto.updateParent(id);
   $.get("http://" + window.location.host +
     "/api" + id + "?select=*&meta=true&value=true",
@@ -101,8 +105,8 @@ corto.request = function(id) {
 $(function() {
 
 // Initialization of tables
-$("#scope").html(t_objectList({objects: [], objectTemplate: t_object}));
-$("#value").html(t_valueTree({value: {}, property: t_property}));
+$("#scope").html(t_objectTable({objects: [], objectTemplate: t_object}));
+$("#value").html(t_valueTable({value: {}, property: t_property}));
 
 // Initial request
 corto.request("");
