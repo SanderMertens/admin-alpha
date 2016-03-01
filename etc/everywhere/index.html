@@ -40,8 +40,12 @@
     </div>
 
     <script type="template/text" id="object">
-        <tr class="object <%= alt %>" ondblclick="corto.request(corto.parent + '/' + '<%-id%>')" onclick='corto.updateValue(<%= JSON.stringify({value: value}) %>)'>
+        <% console.log(id + ": " + name); %>
+        <tr class="object <%= alt %>"
+          ondblclick="corto.request(corto.parent + '/' + '<%-id%>')"
+          onclick="corto.requestValue(corto.parent, '<%-id%>')">
           <td class="object-id"><%= corto.link(corto.parent + "/" + id, id) %></td>
+          <td><%= name %></td>
           <td class="object-type">
             <% if (type.substring(0, 1) != "/") { %>
               <%= corto.link("/corto/lang/" + type, type) %>
@@ -49,13 +53,12 @@
               <%= corto.link(type, type) %>
             <% } %>
           </td>
-          <td class="object-value"><%= corto.json.prettyPrint(value, 100) %></td>
         </tr>
     </script>
 
     <script type="template/text" id="objectTable">
       <table id="admin-table">
-      <tr><th>id</th><th>type</th><th class="object-value">preview</th></tr>
+      <tr><th>id</th><th>name</th><th>type</th></tr>
         <%
         var i = 0;
         if (objects.length) {
@@ -64,6 +67,7 @@
         %>
         <%= objectTemplate({
           id: item.id,
+          name: (item.meta.name && (item.id != item.meta.name)) ? item.meta.name : "",
           type: item.meta.type,
           value: item.value,
           alt: i % 2 ? "alt" : ""}) %>
@@ -75,7 +79,7 @@
 
     <script type="template/text" id="objectTableLoading">
       <table id="admin-table">
-        <tr><th>id</th><th>type</th><th class="object-value">preview</th></tr>
+        <tr><th>id</th><th>name</th><th>type</th></tr>
         <tr><td>Loading...</td><td></td><td></td></tr>
       </table>
     </script>
@@ -117,9 +121,10 @@
 
     <script type="template/text" id="metaTable">
       <table id="admin-table">
-        <tr><th>property</th><th>value</th></tr>
+        <tr><th>metaproperty</th><th>value</th></tr>
+        <tr class="alt"><td><span class="json-key">id</span></td><td class="object-id"><%= id %></td></tr>
         <tr><td><span class="json-key">name</span></td><td><%= name %></td></tr>
-        <tr><td><span class="json-key">type</span></td><td><%= name %></td></tr>
+        <tr class="alt"><td><span class="json-key">type</span></td><td class="object-type"><%= corto.link(type, type) %></td></tr>
       </table>
     </script>
 

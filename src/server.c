@@ -8,7 +8,9 @@
 
 #include "corto/admin/admin.h"
 
-corto_int16 _admin_server_construct(admin_server this) {
+corto_int16 _admin_server_construct(
+    admin_server this)
+{
 /* $begin(corto/admin/server/construct) */
     corto_string path;
 

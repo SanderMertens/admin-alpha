@@ -69,9 +69,18 @@ corto.linkSplitUp = function(name) {
 
 // Populate value table
 corto.updateValue = function(data) {
-  console.log("Update value...");
   $("#value").html(t_valueTable({value: {}, property: t_property}));
-  $("#value").html(t_valueTable({value: data.value, property: t_property}));
+
+  var name;
+  if (!data.meta.name) {
+      name = data.id;
+  } else {
+      name = data.meta.name;
+  }
+
+  $("#value").html(
+    t_metaTable({id: data.id, name: name, type: data.meta.type}) +
+    t_valueTable({value: data.value, property: t_property}));
 }
 
 // Populate scope table
@@ -84,21 +93,34 @@ corto.updateParent = function(id) {
   $("#navigator").html(corto.linkSplitUp(id));
 }
 
+// Request a value
+corto.requestValue = function(parent, id) {
+  $("#value").html(
+    t_metaTable({id: id, name: "...", type: "..."}) +
+    t_valueTableLoading({})
+  )
+
+  if (id != undefined) {
+    $.get("http://" + window.location.host +
+      "/api" + parent + "?select=" + id + "&value=true&meta=true",
+      corto.updateValue);
+  } else {
+    $.get("http://" + window.location.host +
+      "/api" + parent + "?value=true&meta=true",
+      corto.updateValue);
+  }
+}
+
 // Request a scope
 corto.request = function(id) {
   corto.parent = id;
   $("#scope").html(t_objectTableLoading({}))
-  $("#value").html(
-    t_metaTable({name: id, type: "???"}) +
-    t_valueTableLoading({})
-  )
   corto.updateParent(id);
+  corto.requestValue(id);
+
   $.get("http://" + window.location.host +
-    "/api" + id + "?select=*&meta=true&value=true",
+    "/api" + id + "?select=*&meta=true",
     corto.updateScope);
-  $.get("http://" + window.location.host +
-    "/api" + id + "?value=true",
-    corto.updateValue);
 }
 
 // Document.ready
