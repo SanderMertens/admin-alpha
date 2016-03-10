@@ -39,6 +39,9 @@ var t_metaTable = _.template($("#metaTable").html());
 
 // Initialize parent to root
 corto.parent = "";
+corto.page = 1;
+corto.itemsPerPage = 12;
+corto.numObjects = 0;
 
 // Translate identifier to link
 corto.link = function(ref, name) {
@@ -69,7 +72,7 @@ corto.linkSplitUp = function(name) {
 
 // Populate value table
 corto.updateValue = function(data) {
-  $("#value").html(t_valueTable({value: {}, property: t_property}));
+  $("#value").html(t_valueTable({value: {}, augments: undefined, property: t_property}));
 
   var name;
   if (!data.meta.name) {
@@ -80,11 +83,13 @@ corto.updateValue = function(data) {
 
   $("#value").html(
     t_metaTable({id: data.id, name: name, type: data.meta.type}) +
-    t_valueTable({value: data.value, property: t_property}));
+    t_valueTable({value: data.value, augments: data.augments, property: t_property}));
 }
 
 // Populate scope table
 corto.updateScope = function(data) {
+  corto.numObjects = data.length;
+  corto.updatePage();
   $("#scope").html(t_objectTable({objects: data, objectTemplate: t_object}))
 }
 
@@ -102,11 +107,11 @@ corto.requestValue = function(parent, id) {
 
   if (id != undefined) {
     $.get("http://" + window.location.host +
-      "/api" + parent + "?select=" + id + "&value=true&meta=true",
+      "/api" + parent + "?select=" + id + "&value=true&meta=true&augment=*",
       corto.updateValue);
   } else {
     $.get("http://" + window.location.host +
-      "/api" + parent + "?value=true&meta=true",
+      "/api" + parent + "?value=true&meta=true&augment=*",
       corto.updateValue);
   }
 }
@@ -114,13 +119,41 @@ corto.requestValue = function(parent, id) {
 // Request a scope
 corto.request = function(id) {
   corto.parent = id;
-  $("#scope").html(t_objectTableLoading({}))
+  $("#scope").html(t_objectTableLoading({}));
   corto.updateParent(id);
   corto.requestValue(id);
+  corto.page = 1;
+  corto.refresh(id);
+}
 
+corto.refresh = function(id) {
   $.get("http://" + window.location.host +
-    "/api" + id + "?select=*&meta=true",
-    corto.updateScope);
+    "/api" + id + "?select=*&meta=true&offset=" +
+        ((corto.page - 1) * corto.itemsPerPage) + "&limit=" + corto.itemsPerPage,
+        corto.updateScope);
+}
+
+corto.navigate = function(nav) {
+  if (((nav == -1) && (corto.page > 1)) || ((nav == 1) && (corto.numObjects == corto.itemsPerPage))) {
+    corto.page += nav;
+    corto.refresh(corto.parent);
+    corto.updatePage();
+  }
+}
+
+corto.updatePage = function() {
+  $("#pageid").html("<p>" + corto.page + "</p>");
+  if (corto.page == 1) {
+    $("#pagearrowleft").hide();
+  } else {
+    $("#pagearrowleft").show();
+  }
+  console.log(corto.numObjects);
+  if (corto.numObjects < corto.itemsPerPage) {
+    $("#pagearrowright").hide();
+  } else {
+    $("#pagearrowright").show();
+  }
 }
 
 // Document.ready
@@ -128,7 +161,7 @@ $(function() {
 
 // Initialization of tables
 $("#scope").html(t_objectTable({objects: [], objectTemplate: t_object}));
-$("#value").html(t_valueTable({value: {}, property: t_property}));
+$("#value").html(t_valueTable({value: {}, augments: undefined, property: t_property}));
 
 // Initial request
 corto.request("");

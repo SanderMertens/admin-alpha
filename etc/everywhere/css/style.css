@@ -46,6 +46,7 @@ nav.navbar-doc {
   font-family: 'Source Code Pro';
   border: 2px solid #464D59;
   margin-bottom: 20px;
+  box-shadow: 0px 0px 20px rgba(0, 0, 0, .4);
 }
 #admin-table td,th {
   padding: 10px;
@@ -69,7 +70,10 @@ tr.object {
 #admin-table tr:hover {
   background-color: #111;
 }
-
+.restlink {
+  font-size: 13px;
+  vertical-align: center;
+}
 span,td.object-id {
   color: #73cddd;
 }
@@ -88,6 +92,38 @@ td.object-value,th.object-value {
 }
 
 #value {
+}
+
+#pagenav {
+    display: inline-block;
+}
+
+#pageleft {
+  position: absolute;
+  top: -45px; right: 45px;
+  cursor: pointer;
+}
+#pageleft:hover {background-color: #282c34;}
+#pageid {
+  position: absolute;
+  top: -45px; right: 15px;
+}
+#pageright {
+  position: absolute;
+  top: -45px; right: -15px;
+  cursor: pointer;
+}
+#pageright:hover {background-color: #282c34;}
+
+div.pagebutton {
+  background-color: #464D59;
+  padding: 10px;
+  margin: 0px;
+  font-size: 10px;
+  vertical-align: top;
+  height: 35px;
+  width: 30px;
+  color: #fff;
 }
 
 .json-key {

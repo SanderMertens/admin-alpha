@@ -34,13 +34,21 @@
     <div id="browser" class="container-fluid">
       <div id="navigator" class="col-md-12"></div>
       <div id="data">
-        <div id="scope" class="col-md-7"></div>
+        <div class="col-md-7">
+          <div class="container-fluid">
+            <div class="col-md-12" id="pagenav">
+              <div class="pagebutton" id="pageleft" onclick="corto.navigate(-1)"><span id="pagearrowleft" class="octicon octicon-chevron-left"></span></div>
+              <div class="pagebutton" id="pageid"><p>1</p></div>
+              <div class="pagebutton" id="pageright" onclick="corto.navigate(1)"><span id="pagearrowright" class="octicon octicon-chevron-right"></span></div>
+            </div>
+          </div>
+          <div id="scope"></div>
+        </div>
         <div id="value" class="col-md-5"></div>
       </div>
     </div>
 
     <script type="template/text" id="object">
-        <% console.log(id + ": " + name); %>
         <tr class="object <%= alt %>"
           ondblclick="corto.request(corto.parent + '/' + '<%-id%>')"
           onclick="corto.requestValue(corto.parent, '<%-id%>')">
@@ -121,21 +129,44 @@
 
     <script type="template/text" id="metaTable">
       <table id="admin-table">
-        <tr><th>metaproperty</th><th>value</th></tr>
-        <tr class="alt"><td><span class="json-key">id</span></td><td class="object-id"><%= id %></td></tr>
+        <tr><th colspan="2">metaproperties</th></tr>
+        <tr class="alt"><td><span class="json-key">id</span></td><td><%= id %></td></tr>
         <tr><td><span class="json-key">name</span></td><td><%= name %></td></tr>
         <tr class="alt"><td><span class="json-key">type</span></td><td class="object-type"><%= corto.link(type, type) %></td></tr>
+        <tr><td><span class="json-key">api</span></td><td class="object-id restlink">
+          <%
+            url = "http://" +
+              window.location.host +
+              "/api" + corto.parent + "?select=" + id + "&value=true&augment=*";
+
+          %>
+          <a href="<%=url%>" target="_blank"><%=url%></a>
+        </td></tr>
       </table>
     </script>
 
     <script type="template/text" id="valueTable">
       <table id="admin-table">
-        <tr><th>property</th><th>value</th></tr>
+        <tr><th colspan="2">properties</th></tr>
         <% var i = 0;
-           _.each(value, function(item, key, list) { i ++; %>
+          if (value instanceof Object || value instanceof Array) {
+            _.each(value, function(item, key, list) { i ++; %>
           <%= property({key: key, item: item, property: property, indent: 0, i: i}) %>
-        <% }) %>
-      </table>
+        <% })
+          } else {%>
+            <%= property({key: "value", item: value, property: property, indent: 0, i: 0}) %>
+        <% } %>
+        </table>
+        <% if (augments != undefined) { %>
+          <% _.each(augments, function(augment, key, list) { i = 0; %>
+              <table id="admin-table">
+              <tr><th colspan="2" class="augmentheader" style="padding-top: 15px"><%=augment.name%></th></tr>
+              <% _.each(augment.value, function(item, key, list) { i++; %>
+                <%= property({key: key, item: item, property: property, indent: 0, i: i}) %>
+              <% }) %>
+              </table>
+          <% }) %>
+        <% } %>
     </script>
 
     <script type="template/text" id="valueTableLoading">
