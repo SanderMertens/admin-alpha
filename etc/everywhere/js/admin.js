@@ -148,7 +148,6 @@ corto.updatePage = function() {
   } else {
     $("#pagearrowleft").show();
   }
-  console.log(corto.numObjects);
   if (corto.numObjects < corto.itemsPerPage) {
     $("#pagearrowright").hide();
   } else {
