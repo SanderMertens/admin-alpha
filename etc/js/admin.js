@@ -47,6 +47,34 @@ corto.boxes = [];
 corto.table = {};
 corto.objectViews = {};
 
+corto.lastMember = function(item) {
+  items = item.split(".");
+  return items[items.length - 1];
+}
+
+corto.resolveMember = function(value, item, truncate) {
+  if ((value != undefined) && !item || (value instanceof Object)) {
+    result = value;
+
+    if (item) {
+      members = item.split(".");
+      for (var i = 1; i < members.length; i++) {
+        result = result[members[i]];
+      }
+    }
+  }
+
+  if (result && result.length > 30) {
+    if (truncate) {
+      result = '..' + result.substring(result.length - 29, result.length);
+    }
+  } else if (!truncate) {
+    result = null;
+  }
+
+  return result;
+}
+
 corto.updatePaneWidth = function(a) {
   views = document.getElementById('admin-objectViews');
   objects = document.getElementById('admin-objects');
@@ -69,9 +97,10 @@ corto.subscribe = function(id) {
     viewer = corto.objectViews.querySelector('#' + id + '-viewer-tab');
     corto.updateTabs(viewer);
     corto.requestValue(corto.parent, id);
+    corto.updateColumns();
   }
   if (corto.updatePaneWidth(1) == 0) {
-    window.setTimeout(append, 300);
+    window.setTimeout(append, 280);
   } else {
     append();
   }
@@ -88,13 +117,13 @@ corto.unsubscribe = function(id) {
     }
   }
   corto.updatePaneWidth(0);
+  window.setTimeout(corto.updateColumns, 280);
 }
 
 corto.checkHandler = function(event) {
   row = event.target.parentNode.parentNode.parentNode.parentNode;
   if (event.target.checked) {
     $(row).addClass("is-selected");
-    console.log("subscribe for " + row.id);
     corto.subscribe(row.id);
   } else {
     corto.unsubscribe(row.id);
@@ -166,9 +195,52 @@ corto.updateValue = function(data) {
     $("#" + data.id + "-value").html(t_valueTable({value: data.value, augments: data.augments, property: t_property}));
   } else {
     dataLink = corto.objectViews.querySelector('#' + data.id + '-viewer-link-data');
-    $(dataLink).html("&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;")
     metaLink = corto.objectViews.querySelector('#' + data.id + '-viewer-link-meta');
     metaLink.click()
+    $(dataLink).css({"color": "#eeeeee"});
+  }
+}
+
+corto.findColumns = function(columns, prefix, value) {
+  for (var c in value) {
+    v = value[c];
+    if ((v != undefined) && !(v instanceof Array)) {
+      if (v instanceof Object) {
+        columns = corto.findColumns(columns, prefix + '.' + c, v);
+      } else {
+        columns.push(prefix + '.' + c);
+      }
+    }
+  }
+  return columns;
+}
+
+corto.updateColumns = function() {
+  var objects = $("#admin-objects");
+
+  var offset = 70;
+  for (var i = 1; i < 100; i++) {
+    var maxWidth = 30;
+    elems = $("span.tbl-column-" + i);
+    elems.each(function(){
+      width = this.textContent.trim().length * 10;
+      maxWidth = width > maxWidth ? width : maxWidth;
+
+      if (offset < (objects.width() - 200)) {
+          $(this).css({
+            "position": "absolute",
+            "left": "" + offset + "px",
+            "visibility": "visible"
+          });
+      } else {
+          $(this).css({
+            "position": "absolute",
+            "left": "0px",
+            "visibility": "hidden"
+          });
+      }
+    });
+    offset += maxWidth;
   }
 }
 
@@ -178,6 +250,7 @@ corto.updateScope = function(data) {
   corto.updatePage();
 
   var types = {};
+  var objects = $("#admin-objects");
 
   for(var i = 0; i < data.length; i++) {
     type = data[i].meta.type;
@@ -186,23 +259,28 @@ corto.updateScope = function(data) {
     }
     types[type].push(data[i]);
   }
+  objects.html("");
 
-  $("#admin-objects").html("");
+  var keys = [];
   for (var k in types) {
+    keys.push(k);
+  }
+  keys.sort();
+
+  for (var i = 0; i < keys.length; i++) {
+    k = keys[i];
+    columns = corto.findColumns([], '', types[k][0].value);
     var typeStr = k[0] == '/' ? k.substring(1) : k;
-    columns = [];
-    console.log(types[k][0]);
-    for (var c in types[k][0].value) {
-      v = types[k][0].value[c];
-      if ((v != undefined) && !(v instanceof Object) && !(v instanceof Array)) {
-        columns.push(c);
-      }
-    }
-    console.log(columns);
-    $("#admin-objects").append(t_objectTable({type: typeStr, objects: types[k], columns: columns, objectTemplate: t_object}))
+    objects.append(t_objectTable({type: typeStr, objects: types[k], columns: columns, objectTemplate: t_object}))
     componentHandler.upgradeElement(document.getElementById(typeStr + '-object-table'));
   }
   corto.updateCheckboxes();
+
+  objects.find('[id$=-tooltip]').each(function(){
+    componentHandler.upgradeElement(this);
+  });
+
+  corto.updateColumns();
 }
 
 // Set parent
@@ -266,6 +344,10 @@ corto.updatePage = function() {
 
 // Document.ready
 $(function() {
+
+$( window ).resize(function() {
+  corto.updateColumns();
+});
 
 // Code to select row-checkboxes when header checkbox is clicked
 corto.objectViews = document.querySelector('#admin-objectViews');

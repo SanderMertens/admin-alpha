@@ -131,7 +131,13 @@
           </span>
           <span class='tbl-column-<%=column++%>'><%= id %></span>
           <% _.each(columns, function(item, key, list) {%>
-            <span class='admin-columnValue tbl-column-<%=column++%>'><%=value[item]%></span>
+            <span id='<%=id%>.<%=item%>' class='admin-columnValue tbl-column-<%=column++%>'><%=corto.resolveMember(value, item, true)%></span>
+            <%
+              var s = corto.resolveMember(value, item, false);
+              if (s != null) {%>
+                <div id='<%=id%>.<%=item%>-tooltip' class="mdl-tooltip" for="<%=id%>.<%=item%>"><%=s%></div>
+              <%}
+            %>
           <%})%>
           <span class='tbl-column-right'>
             <button class="mdl-button mdl-js-button mdl-button--icon"><i class="mdl-color-text--blue-grey-400 material-icons" role="presentation">edit</i></button>
@@ -161,7 +167,7 @@
                 </span>
               </span>
               <% _.each(columns, function(item, key, list) {%>
-                <span class='tbl-column-<%=column++%>'><%=item%></span>
+                <span class='tbl-column-<%=column++%>'><%=corto.lastMember(item)%></span>
               <%})%>
               </th>
             </tr>
