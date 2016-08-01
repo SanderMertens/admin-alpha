@@ -1,0 +1,386 @@
+<!doctype html>
+<!--
+  Material Design Lite
+  Copyright 2015 Google Inc. All rights reserved.
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+      https://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="description" content="A front-end template that helps you build fast, modern mobile web apps.">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0">
+    <title>Material Design Lite</title>
+
+    <!-- Add to homescreen for Chrome on Android -->
+    <meta name="mobile-web-app-capable" content="yes">
+    <link rel="icon" sizes="192x192" href="images/android-desktop.png">
+
+    <!-- Add to homescreen for Safari on iOS -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="apple-mobile-web-app-title" content="Material Design Lite">
+    <link rel="apple-touch-icon-precomposed" href="images/ios-desktop.png">
+
+    <!-- Tile icon for Win8 (144x144 + tile color) -->
+    <meta name="msapplication-TileImage" content="images/touch/ms-touch-icon-144x144-precomposed.png">
+    <meta name="msapplication-TileColor" content="#3372DF">
+
+    <link rel="shortcut icon" href="images/favicon.png">
+
+    <!-- SEO: If your mobile URL is different from the desktop URL, add a canonical link to the desktop page https://developers.google.com/webmasters/smartphone-sites/feature-phones -->
+    <!--
+    <link rel="canonical" href="http://www.example.com/">
+    -->
+
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:regular,bold,italic,thin,light,bolditalic,black,medium&amp;lang=en">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <link rel="stylesheet" href="https://code.getmdl.io/1.1.3/material.cyan-light_blue.min.css">
+    <link href='https://fonts.googleapis.com/css?family=Raleway:600,400,300' rel='stylesheet' type='text/css'>
+    <link href='https://fonts.googleapis.com/css?family=Source+Code+Pro:400,300' rel='stylesheet' type='text/css'>
+    <link href='https://fonts.googleapis.com/css?family=Roboto+Mono:400,500' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+    #view-source {
+      position: fixed;
+      display: block;
+      right: 0;
+      bottom: 0;
+      margin-right: 40px;
+      margin-bottom: 40px;
+      z-index: 900;
+    }
+    </style>
+  </head>
+  <body>
+    <div class="admin-layout mdl-layout mdl-js-layout mdl-layout--fixed-drawer mdl-layout--fixed-header">
+      <header class="admin-header mdl-layout__header mdl-color--grey-100 mdl-color-text--grey-600">
+        <div class="mdl-layout__header-row">
+          <button class="mdl-button mdl-js-button mdl-button--icon">
+            <i class="material-icons">arrow_back</i>
+          </button>
+          <button class="mdl-button mdl-js-button mdl-button--icon mdl-cell--hide-phone">
+            &nbsp;
+            <i class="material-icons">arrow_forward</i>
+          </button>
+          &nbsp;&nbsp;
+          <span class="admin-layout-title mdl-layout-title"><span class="mdl-cell--hide-phone"><span class="corto-url">corto</span>://cities/</span>USA</span>
+          <div class="mdl-layout-spacer"></div>
+          <div class="mdl-textfield mdl-js-textfield mdl-textfield--expandable">
+            <label class="mdl-button mdl-js-button mdl-button--icon" for="search">
+              <i class="material-icons">search</i>
+            </label>
+            <div class="mdl-textfield__expandable-holder">
+              <input class="mdl-textfield__input" type="text" id="search">
+              <label class="mdl-textfield__label" for="search">Enter your query...</label>
+            </div>
+          </div>
+          <button class="mdl-button mdl-js-button mdl-js-ripple-effect mdl-button--icon" id="hdrbtn">
+            <i class="material-icons">more_vert</i>
+          </button>
+          <ul class="mdl-menu mdl-js-menu mdl-js-ripple-effect mdl-menu--bottom-right" for="hdrbtn">
+            <li class="mdl-menu__item">About</li>
+            <li class="mdl-menu__item">Contact</li>
+            <li class="mdl-menu__item">Legal information</li>
+          </ul>
+        </div>
+      </header>
+      <div class="admin-drawer mdl-layout__drawer mdl-color--blue-grey-900 mdl-color-text--blue-grey-50">
+        <header class="admin-drawer-header">
+          <img src="./images/cortologo_light.png" width="100px">
+          <div class="admin-avatar-dropdown">
+            <span>localhost:8000</span>
+            <div class="mdl-layout-spacer"></div>
+            <button id="accbtn" class="mdl-button mdl-js-button mdl-js-ripple-effect mdl-button--icon">
+              <i class="material-icons" role="presentation">arrow_drop_down</i>
+              <span class="visuallyhidden">Accounts</span>
+            </button>
+            <ul class="mdl-menu mdl-menu--bottom-right mdl-js-menu mdl-js-ripple-effect" for="accbtn">
+              <li class="mdl-menu__item">hello@example.com</li>
+              <li class="mdl-menu__item">info@example.com</li>
+              <li class="mdl-menu__item"><i class="material-icons">add</i>Add another account...</li>
+            </ul>
+          </div>
+        </header>
+        <nav class="mdl-navigation mdl-color--blue-grey-800 admin-navigation">
+          <a class="mdl-navigation__link" href=""><i class="mdl-color-text--blue-grey-400 material-icons" role="presentation">search</i>Browser</a>
+          <a class="mdl-navigation__link" href=""><i class="mdl-color-text--blue-grey-400 material-icons" role="presentation">swap_horiz</i>Traffic</a>
+          <a class="mdl-navigation__link" href=""><i class="mdl-color-text--blue-grey-400 material-icons" role="presentation">equalizer</i>Trends</a>
+          <a class="mdl-navigation__link" href=""><i class="mdl-color-text--blue-grey-400 material-icons mdl-badge mdl-badge--overlap" data-badge="15" role="presentation">notifications</i>Events</a>
+          <div class="mdl-layout-spacer"></div>
+          <a class="mdl-navigation__link" href=""><i class="mdl-color-text--blue-grey-400 material-icons" role="presentation">help_outline</i><span class="visuallyhidden">Help</span></a>
+        </nav>
+      </div>
+      <main class="mdl-layout__content mdl-color--grey-100">
+        <div class="mdl-grid admin-content">
+          <div class="admin-left mdl-color--white mdl-shadow--2dp mdl-cell mdl-cell--6-col mdl-cell--12-col-tablet mdl-grid">
+            <div id="scope"></div>
+          </div>
+
+          <div class="admin-right mdl-cell mdl-cell--6-col mdl-cell--12-col-tablet mdl-grid mdl-grid--no-spacing">
+
+            <!--div class="mdl-color--white mdl-shadow--2dp mdl-cell mdl-cell--12-col">
+              <div class="mdl-tabs mdl-js-tabs mdl-js-ripple-effect">
+                <div class="mdl-tabs__tab-bar">
+                    <a href="#data-panel" class="mdl-tabs__tab is-active">DATA</a>
+                    <a href="#meta-panel" class="mdl-tabs__tab">METADATA</a>
+                    <a href="#scope-panel" class="mdl-tabs__tab">SCOPE</a>
+                </div>
+                <div class="mdl-tabs__panel is-active" id="data-panel">
+                  <!div id="value"></div>
+                </div>
+                <div class="mdl-tabs__panel is-active" id="meta-panel">
+                </div>
+                <div class="mdl-tabs__panel is-active" id="scope-panel">
+                </div>
+              </div>
+            </div>
+
+            <div class="admin-separator mdl-cell--1-col"></div-->
+
+            <div class="mdl-color--white mdl-shadow--2dp mdl-cell mdl-cell--12-col">
+              <div class="mdl-tabs mdl-js-tabs mdl-js-ripple-effect">
+                <div class="mdl-tabs__tab-bar">
+                    <a href="#starks-panel" class="mdl-tabs__tab is-active">DATA</a>
+                    <a href="#lannisters-panel" class="mdl-tabs__tab">METADATA</a>
+                    <a href="#targaryens-panel" class="mdl-tabs__tab">SCOPE</a>
+                </div>
+
+                <div class="mdl-tabs__panel is-active" id="starks-panel">
+                  <table class="mdl-js-data-table">
+                  <thead>
+                    <tr>
+                      <th></th>
+                      <th class="mdl-data-table__cell--non-numeric">New York</th>
+                      <th class="mdl-data-table__cell--non-numeric">San Francisco</th>
+                      <th class="mdl-data-table__cell--non-numeric">Boston</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td class="mdl-data-table__cell--non-numeric"> <span class="admin-member">population</span> </td>
+                      <td> 19,795,791 </td>
+                      <td> 864,816 </td>
+                      <td> 667,137 </td>
+                    </tr>
+                    <tr>
+                      <td class="mdl-data-table__cell--non-numeric"> <span class="admin-member">surface area</span> </td>
+                      <td> 231.89sqmi  </td>
+                      <td> 54,555sqmi </td>
+                      <td> 89.63sqmi </td>
+                    </tr>
+                    <tr>
+                      <td class="mdl-data-table__cell--non-numeric"> <span class="admin-member">state</span> </td>
+                      <td> New York  </td>
+                      <td> California </td>
+                      <td> Massachusetts </td>
+                    </tr>
+                  </tbody>
+                  </table>
+                </div>
+                <div class="mdl-tabs__panel" id="lannisters-panel">
+                  <table class="mdl-js-data-table">
+                  <thead>
+                    <tr>
+                      <th></th>
+                      <th class="mdl-data-table__cell--non-numeric">New York</th>
+                      <th class="mdl-data-table__cell--non-numeric">San Francisco</th>
+                      <th class="mdl-data-table__cell--non-numeric">Boston</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td class="mdl-data-table__cell--non-numeric"> <span class="admin-member">id</span> </td>
+                      <td> 103551 </td>
+                      <td> 103552 </td>
+                      <td> 103553 </td>
+                    </tr>
+                    <tr>
+                      <td class="mdl-data-table__cell--non-numeric"> <span class="admin-member">type</span> </td>
+                      <td> cities/City </td>
+                      <td> cities/City </td>
+                      <td> cities/City </td>
+                    </tr>
+                    <tr>
+                      <td class="mdl-data-table__cell--non-numeric"> <span class="admin-member">owner</span> </td>
+                      <td> citiesMount </td>
+                      <td> citiesMount </td>
+                      <td> citiesMount </td>
+                    </tr>
+                    <tr>
+                      <td class="mdl-data-table__cell--non-numeric"> <span class="admin-member">valid</span> </td>
+                      <td> Yes </td>
+                      <td> Yes </td>
+                      <td> Yes </td>
+                    </tr>
+                    <tr>
+                      <td class="mdl-data-table__cell--non-numeric"> <span class="admin-member">defined</span> </td>
+                      <td> Yes  </td>
+                      <td> Yes </td>
+                      <td> Yes </td>
+                    </tr>
+                  </tbody>
+                  </table>
+                </div>
+                <div class="mdl-tabs__panel" id="targaryens-panel">
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </main>
+
+    </div>
+
+
+    <script type="template/text" id="object">
+        <tr class="object <%= alt %>">
+          <td class="mdl-data-table__cell--non-numeric"><%= id %><p><span class="mdl-cell--hide-phone"><span class="admin-type"><%= type %></span></span></p></td>
+          <td class="admin-buttons">
+            <button class="mdl-button mdl-js-button mdl-button--icon"><i class="mdl-color-text--blue-grey-400 material-icons" role="presentation">edit</i></button>
+            <button class="mdl-button mdl-js-button mdl-button--icon mdl-cell--hide-phone"><i class="mdl-color-text--blue-grey-400 material-icons" role="presentation">link</i></button>
+            <button class="mdl-button mdl-js-button mdl-button--icon"><i class="mdl-color-text--blue-grey-400 material-icons" role="presentation">subdirectory_arrow_right</i></button>
+          </td>
+        </tr>
+    </script>
+
+    <script type="template/text" id="objectTable">
+      <table class="mdl-js-data-table mdl-data-table--selectable">
+      <thead>
+        <tr>
+          <th class="mdl-data-table__cell--non-numeric">Object</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <%
+        var i = 0;
+        if (objects.length) {
+        _.each(objects, function(item, key, list) {
+          i ++;
+        %>
+        <%= objectTemplate({
+          id: item.id,
+          name: (item.meta.name && (item.id != item.meta.name)) ? item.meta.name : "",
+          type: item.meta.type,
+          value: item.value,
+          alt: i % 2 ? "alt" : ""}) %>
+      <% }); } else { %>
+          <tr class="object"><td>No objects</td><td></td><td></td></tr>
+      <% }; %>
+      </tbody>
+      </table>
+    </script>
+
+    <script type="template/text" id="property">
+      <tr <%if(i%2){%>class="alt"<%}%>><td>
+        <%="&nbsp;".repeat(indent?indent-1:indent)%>
+        <% if (indent) {
+             if (typeof(key) == "number") { %>
+               [<span class="json-key"><%=key%></span>]
+          <% } else { %>
+              .<span class="json-key"><%=key%></span>
+          <% }
+          } else {%>
+            <span class="json-key"><%=key%></span>
+        <%}%>
+      </td><td>
+      <% if (item instanceof Object) { %>
+        { ... }
+      <% } else { %>
+        <% if (item && item.constructor === String) { %>
+          <span class="json-string">&quot;<%} else {%>
+          <span class="json-value">
+        <%}%><%= item %><% if (item && item.constructor === String) { %>&quot;<%}%>
+        </span>
+      <% } %>
+      </td></tr>
+      <% if (item instanceof Object) { %>
+        <%_.each(item, function(p, key, list) { i ++; %>
+          <%= property({
+            key: key,
+            item: p,
+            property: property,
+            indent: indent + 1,
+            i: i}) %>
+        <% }) %>
+      <% } %>
+    </script>
+
+    <script type="template/text" id="metaTable">
+      <table id="admin-table">
+        <tr><th colspan="2">metaproperties</th></tr>
+        <tr class="alt"><td><span class="json-key">id</span></td><td><%= id %></td></tr>
+        <tr><td><span class="json-key">name</span></td><td><%= name %></td></tr>
+        <tr class="alt"><td><span class="json-key">type</span></td><td class="object-type"><%= corto.link(type, type) %></td></tr>
+        <tr><td><span class="json-key">api</span></td><td class="object-id restlink">
+          <%
+            url = "http://" +
+              window.location.host +
+              "/api" + corto.parent + "?select=" + id + "&value=true&augment=*";
+
+          %>
+          <a href="<%=url%>" target="_blank"><%=url%></a>
+        </td></tr>
+      </table>
+    </script>
+
+    <script type="template/text" id="valueTable">
+      <table id="admin-table">
+        <tr><th colspan="2">properties</th></tr>
+        <% var i = 0;
+          if (value instanceof Object || value instanceof Array) {
+            _.each(value, function(item, key, list) { i ++; %>
+          <%= property({key: key, item: item, property: property, indent: 0, i: i}) %>
+        <% })
+          } else {%>
+            <%= property({key: "value", item: value, property: property, indent: 0, i: 0}) %>
+        <% } %>
+        </table>
+        <% if (augments != undefined) { %>
+          <% _.each(augments, function(augment, key, list) { i = 0; %>
+              <table id="admin-table">
+              <tr><th colspan="2" class="augmentheader" style="padding-top: 15px"><%=augment.name%></th></tr>
+              <% _.each(augment.value, function(item, key, list) { i++; %>
+                <%= property({key: key, item: item, property: property, indent: 0, i: i}) %>
+              <% }) %>
+              </table>
+          <% }) %>
+        <% } %>
+    </script>
+
+    <script type="template/text" id="objectTableLoading">
+      <table id="admin-table">
+        <tr><th>id</th><th>name</th><th>type</th></tr>
+        <tr><td>Loading...</td><td></td><td></td></tr>
+      </table>
+    </script>
+
+    <script type="template/text" id="valueTableLoading">
+      <table id="admin-table">
+        <tr><th>property</th><th>value</th></tr>
+        <tr><td>Loading...</td><td></td></tr>
+      </table>
+    </script>
+
+    <!--a href="https://github.com/google/material-design-lite/blob/master/templates/dashboard/" target="_blank" id="view-source" class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button--colored mdl-color-text--white">View Source</a-->
+    <script src="https://code.getmdl.io/1.1.3/material.min.js"></script>
+    <script src="https://code.jquery.com/jquery-1.12.0.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js"></script>
+    <script src="./js/admin.js"></script>
+
+  </body>
+</html>

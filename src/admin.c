@@ -6,7 +6,7 @@
  * when the file is regenerated.
  */
 
-#include "corto/admin/admin.h"
+#include <corto/admin/admin.h>
 
 int adminMain(int argc, char* argv[]) {
 /* $begin(main) */

@@ -40,7 +40,7 @@ var t_metaTable = _.template($("#metaTable").html());
 // Initialize parent to root
 corto.parent = "";
 corto.page = 1;
-corto.itemsPerPage = 12;
+corto.itemsPerPage = 20;
 corto.numObjects = 0;
 
 // Translate identifier to link
