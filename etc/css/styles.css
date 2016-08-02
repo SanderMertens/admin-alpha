@@ -15,14 +15,17 @@
  */
 
 html, body {
-  /* font-family: 'Roboto', 'Helvetica', sans-serif; */
-  font-family: 'Roboto Mono';
+  font-family: 'Roboto', 'Helvetica', sans-serif;
+  /*font-family: 'Roboto Mono', monospace;*/
+  font-size: 14px;
+  font-weight: 400;
+  letter-spacing: 1px;
 }
 
 a, .admin-url {
   color: rgb(0, 188, 212);
-  font-weight: 400;
   cursor: pointer;
+  font-weight: 400;
 }
 
 div {
@@ -37,6 +40,7 @@ table {
   border-collapse: collapse;
   margin: 0px;
   padding: 0px;
+  border: 1px rgba(0, 0, 0, 0.14) solid;
 }
 td {
   border-top: 1px rgba(0, 0, 0, 0.07) solid;
@@ -51,9 +55,7 @@ th {
   padding-bottom: 12px;
   padding-left: 10px;
   padding-right: 10px;
-  color: rgba(0, 0, 0, 0.870588);
-  font-weight: 500;
-  height: 30px !important;
+  font-weight: inherit;
 }
 th:first-of-type {
   text-align: left !important;
@@ -67,9 +69,7 @@ td p {
   margin: 0px;
 }
 tr {
-  transition: all 0.28s;
-  transition-timing-function: cubic-bezier(.4,0,.2,1);
-  transition-property: color, background-color;
+  transition: all 0.28s, cubic-bezier(.4,0,.2,1);;
 }
 tr.material-icons {
   color: inherit !important;
@@ -77,27 +77,25 @@ tr.material-icons {
 tr.is-selected {
   background-color: #fafafa;
 }
-tr:hover {
-  background-color: #f1f1f1;
-}
-tr {
-  color: #555;
+tbody tr:hover {
+  background-color: #f5f5f5;
 }
 
 span.object-table-title {
   position: relative;
-  top: -3px;
+  padding: 10px;
+  font-size: 18px;
+  font-weight: 300;
+  color: rgb(117, 117, 117);
 }
 span.admin-tabs-name {
   width: 50%;
   margin-left: 10px;
   margin-top: 18px;
   color: rgba(0, 0, 0, 0.870588);
-  font-weight: 500;
 }
 button.admin-wnd-button i {
   color: rgba(0, 0, 0, 0.341176);
-  font-weight: 400;
   font-size: 16px;
 }
 button.admin-wnd-button {
@@ -109,13 +107,17 @@ span.admin-type {
   font-size: 12px;
 }
 span.admin-member {
-  color: #999;
+  color: rgba(0, 0, 0, 0.870588);
+  height: 30px !important;
 }
 td.admin-property {
   text-align: right;
+  color: #999;
 }
-td.admin-columnValue {
+.admin-columnValue {
   text-align: center !important;
+  color: #999 !important;
+  padding-top: 4px;
 }
 
 span.tbl-column-1 { position: absolute; left: 70px; }
@@ -151,8 +153,8 @@ span.tbl-column-right {
 .admin-layout-title {
   font-family: inherit;
 }
-.admin-buttons {
-  text-align: right;
+.admin-button {
+  color: rgb(0, 188, 212) !important;
 }
 
 @media (min-width: 0px) {
@@ -234,7 +236,6 @@ header.admin-header {
       -ms-flex-align: center;
           align-items: center;
   color: #fff;
-  font-weight: 400;
   font-size: 16px;
 }
 .admin-layout .admin-navigation .mdl-navigation__link:hover {
@@ -331,6 +332,20 @@ _:-ms-input-placeholder, :root .admin-graph {
           align-items: center;
 }
 
-.mdl-tabs__tab-bar {
-  height: 55px;
+.mdl-tabs {
+  border: 1px rgba(0, 0, 0, 0.14) solid;
+}
+#value-table {
+  border: none;
+}
+#meta-table {
+  border: none;
+}
+
+#Test {
+  position: absolute;
+  visibility: hidden;
+  height: auto;
+  width: auto;
+  white-space: nowrap; /* Thanks to Herb Caudill comment */
 }

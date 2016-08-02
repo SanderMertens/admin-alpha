@@ -41,15 +41,30 @@ var t_objectViewer = _.template($("#objectViewer").html());
 // Initialize parent to root
 corto.parent = "";
 corto.page = 1;
-corto.itemsPerPage = 10;
+corto.itemsPerPage = 100;
 corto.numObjects = 0;
 corto.boxes = [];
 corto.table = {};
 corto.objectViews = {};
 
+// Delayed execution of a task
+corto.timer = 0;
+corto.delay = function(callback, delay) {
+  clearTimeout(corto.timer);
+  corto.timer = setTimeout(callback, delay);
+}
+
 corto.lastMember = function(item) {
   items = item.split(".");
   return items[items.length - 1];
+}
+
+corto.truncate = function(value, length) {
+  if (value.length > length) {
+    return value.substring(0, length) + '..';
+  } else {
+    return value;
+  }
 }
 
 corto.resolveMember = function(value, item, truncate) {
@@ -64,9 +79,9 @@ corto.resolveMember = function(value, item, truncate) {
     }
   }
 
-  if (result && result.length > 30) {
+  if (result && result.length > 20) {
     if (truncate) {
-      result = '..' + result.substring(result.length - 29, result.length);
+      result = corto.truncate(result, 20);
     }
   } else if (!truncate) {
     result = null;
@@ -89,12 +104,12 @@ corto.updatePaneWidth = function(a) {
   return views.childElementCount;
 }
 
-corto.subscribe = function(id) {
+corto.subscribe = function(id, name) {
   append = function() {
     $(corto.objectViews).append(t_objectViewer({
       id: id
     }));
-    viewer = corto.objectViews.querySelector('#' + id + '-viewer-tab');
+    viewer = corto.objectViews.querySelector('#viewer-tab-' + id);
     corto.updateTabs(viewer);
     corto.requestValue(corto.parent, id);
     corto.updateColumns();
@@ -108,7 +123,7 @@ corto.subscribe = function(id) {
 
 corto.unsubscribe = function(id) {
   $('#' + id + '-viewer').remove();
-  row = document.getElementById(id);
+  row = document.getElementById("row-" + id);
   if (row) {
     $(row).removeClass("is-selected");
     checkbox = document.querySelector("#mdl-check-" + id);
@@ -122,11 +137,12 @@ corto.unsubscribe = function(id) {
 
 corto.checkHandler = function(event) {
   row = event.target.parentNode.parentNode.parentNode.parentNode;
+  var id = row.id.substring(4, row.id.length); /* strip row- */
   if (event.target.checked) {
     $(row).addClass("is-selected");
-    corto.subscribe(row.id);
+    corto.subscribe(id);
   } else {
-    corto.unsubscribe(row.id);
+    corto.unsubscribe(id);
   }
 };
 
@@ -180,38 +196,60 @@ corto.linkSplitUp = function(name) {
 
 // Populate value table
 corto.updateValue = function(data) {
-  $("#" + data.id + "-meta").html(t_metaTable({id: "", name: "", type: ""}));
-  $("#" + data.id + "-value").html(t_valueTable({value: {}, augments: undefined, property: t_property}));
+  $("#meta-" + data.id).html(t_metaTable({id: "", name: "", type: "", owner: ""}));
+  $("#value-" + data.id).html(t_valueTable({value: {}, augments: undefined, property: t_property}));
 
   var name;
-  if (!data.meta.name) {
+  if (data.meta.name == null || data.meta.name == undefined || !data.meta.name.length ) {
       name = data.id;
   } else {
       name = data.meta.name;
   }
 
-  $("#" + data.id + "-meta").html(t_metaTable({id: data.id, name: name, type: data.meta.type}));
-  if ((data.value != undefined) && (data.value != null) && (Object.keys(data.value).length)) {
-    $("#" + data.id + "-value").html(t_valueTable({value: data.value, augments: data.augments, property: t_property}));
+  var owner
+  if (data.meta.owner == undefined) {
+    owner = "me";
   } else {
-    dataLink = corto.objectViews.querySelector('#' + data.id + '-viewer-link-data');
-    metaLink = corto.objectViews.querySelector('#' + data.id + '-viewer-link-meta');
+    owner = data.meta.owner;
+  }
+
+  console.log("data received: " + JSON.stringify(data));
+
+  $("#object-table-title-" + data.id).html(name);
+  $("#meta-" + data.id).html(t_metaTable({id: data.id, name: name, type: data.meta.type, owner: owner}));
+  if ((data.value != undefined) && (data.value != null) && (Object.keys(data.value).length)) {
+    $("#value-" + data.id).html(t_valueTable({value: data.value, augments: data.augments, property: t_property}));
+  } else {
+    dataLink = corto.objectViews.querySelector('#viewer-link-data-' + data.id);
+    metaLink = corto.objectViews.querySelector('#viewer-link-meta-' + data.id);
     metaLink.click()
     $(dataLink).css({"color": "#eeeeee"});
   }
 }
 
 corto.findColumns = function(columns, prefix, value) {
+  var superColumns = [];
+
   for (var c in value) {
     v = value[c];
     if ((v != undefined) && !(v instanceof Array)) {
       if (v instanceof Object) {
-        columns = corto.findColumns(columns, prefix + '.' + c, v);
+        if (c == "super") {
+          superColumns = corto.findColumns(superColumns, prefix + '.' + c, v);
+        } else {
+          columns = corto.findColumns(columns, prefix + '.' + c, v);
+        }
       } else {
         columns.push(prefix + '.' + c);
       }
     }
   }
+
+
+  if (superColumns.length) {
+    columns.push.apply(columns, superColumns);
+  }
+
   return columns;
 }
 
@@ -223,7 +261,13 @@ corto.updateColumns = function() {
     var maxWidth = 30;
     elems = $("span.tbl-column-" + i);
     elems.each(function(){
-      width = this.textContent.trim().length * 10;
+
+      /* Determine width of text */
+      var test = document.getElementById("Test");
+      test.style.fontSize = 14;
+      test.textContent = this.textContent.trim();
+      width = (test.clientWidth + 1) + 50 /* margin */;
+
       maxWidth = width > maxWidth ? width : maxWidth;
 
       if (offset < (objects.width() - 200)) {
@@ -276,7 +320,7 @@ corto.updateScope = function(data) {
   }
   corto.updateCheckboxes();
 
-  objects.find('[id$=-tooltip]').each(function(){
+  objects.find('[col-id$=-tooltip]').each(function(){
     componentHandler.upgradeElement(this);
   });
 
@@ -290,7 +334,7 @@ corto.updateParent = function(id) {
 
 // Request a value
 corto.requestValue = function(parent, id) {
-  $("#meta").html(t_metaTable({id: id, name: "", type: ""}));
+  $("#meta").html(t_metaTable({id: id, name: "", type: "", owner: ""}));
   $("#value").html(t_valueTableLoading({}));
 
   if (id != undefined) {
@@ -304,18 +348,28 @@ corto.requestValue = function(parent, id) {
   }
 }
 
+// Query handler
+corto.search = function(e){
+    corto.delay(function(){corto.request(corto.parent, $('#search').val() + '*')}, 500);
+    return false;
+}
+
 // Request a scope
-corto.request = function(id) {
+corto.request = function(id, query) {
   corto.parent = id;
   $("#scope").html(t_objectTableLoading({}));
   corto.updateParent(id);
   corto.page = 1;
-  corto.refresh(id);
+  corto.refresh(id, query);
 }
 
-corto.refresh = function(id) {
+corto.refresh = function(id, query) {
+  var q = "*";
+  if (query != undefined) {
+      q = query;
+  }
   $.get("http://" + window.location.host +
-    "/api" + id + "?select=*&meta=true&value=true&offset=" +
+    "/api" + id + "?select=" + q + "&meta=true&value=true&offset=" +
         ((corto.page - 1) * corto.itemsPerPage) + "&limit=" + corto.itemsPerPage,
         corto.updateScope);
 }
@@ -348,6 +402,8 @@ $(function() {
 $( window ).resize(function() {
   corto.updateColumns();
 });
+
+
 
 // Code to select row-checkboxes when header checkbox is clicked
 corto.objectViews = document.querySelector('#admin-objectViews');
