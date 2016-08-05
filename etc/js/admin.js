@@ -37,6 +37,8 @@ var t_valueTableLoading = _.template($("#valueTableLoading").html());
 var t_property = _.template($("#property").html());
 var t_metaTable = _.template($("#metaTable").html());
 var t_objectViewer = _.template($("#objectViewer").html());
+var t_inlineScope = _.template($("#inlineScope").html());
+var t_inlineScopeElement = _.template($("#inlineScopeElement").html());
 
 // Initialize parent to root
 corto.parent = "";
@@ -60,10 +62,14 @@ corto.lastMember = function(item) {
 }
 
 corto.truncate = function(value, length) {
-  if (value.length > length) {
-    return value.substring(0, length) + '..';
+  if (typeof value == "string") {
+    if (value.length > length) {
+      return value.substring(0, length) + '..';
+    } else {
+      return value;
+    }
   } else {
-    return value;
+    return value
   }
 }
 
@@ -104,14 +110,18 @@ corto.updatePaneWidth = function(a) {
   return views.childElementCount;
 }
 
-corto.subscribe = function(id, name) {
+corto.subscribe = function(id, parent) {
+  if (parent == "." || parent == undefined) {
+    parent = corto.parent;
+  }
+  console.log("subscribe for " + id + ", " + parent);
   append = function() {
     $(corto.objectViews).append(t_objectViewer({
       id: id
     }));
     viewer = corto.objectViews.querySelector('#viewer-tab-' + id);
     corto.updateTabs(viewer);
-    corto.requestValue(corto.parent, id);
+    corto.requestValue(parent, id);
     corto.updateColumns();
   }
   if (corto.updatePaneWidth(1) == 0) {
@@ -140,7 +150,11 @@ corto.checkHandler = function(event) {
   var id = row.id.substring(4, row.id.length); /* strip row- */
   if (event.target.checked) {
     $(row).addClass("is-selected");
-    corto.subscribe(id);
+    var parent = row.dataset.parent;
+    if (parent != '.') {
+      parent = '/' + parent;
+    }
+    corto.subscribe(id, parent);
   } else {
     corto.unsubscribe(id);
   }
@@ -213,8 +227,6 @@ corto.updateValue = function(data) {
     owner = data.meta.owner;
   }
 
-  console.log("data received: " + JSON.stringify(data));
-
   $("#object-table-title-" + data.id).html(name);
   $("#meta-" + data.id).html(t_metaTable({id: data.id, name: name, type: data.meta.type, owner: owner}));
   if ((data.value != undefined) && (data.value != null) && (Object.keys(data.value).length)) {
@@ -245,7 +257,6 @@ corto.findColumns = function(columns, prefix, value) {
     }
   }
 
-
   if (superColumns.length) {
     columns.push.apply(columns, superColumns);
   }
@@ -254,36 +265,32 @@ corto.findColumns = function(columns, prefix, value) {
 }
 
 corto.updateColumns = function() {
-  var objects = $("#admin-objects");
-
   var offset = 70;
-  for (var i = 1; i < 100; i++) {
+  var tableWidth = $(corto.adminObjects).width();
+  for (var i = 1; i < 11; i++) {
     var maxWidth = 30;
-    elems = $("span.tbl-column-" + i);
-    elems.each(function(){
+    elems = corto.adminObjects.querySelectorAll("span.tbl-column-" + i);
+    for (var j = 0; j < elems.length; j++) {
+      e = elems[j];
 
       /* Determine width of text */
-      var test = document.getElementById("Test");
-      test.style.fontSize = 14;
-      test.textContent = this.textContent.trim();
-      width = (test.clientWidth + 1) + 50 /* margin */;
+      corto.WidthTool.style.fontSize = 14;
+      corto.WidthTool.textContent = e.textContent.trim();
+      width = (corto.WidthTool.clientWidth + 1) + 50 /* margin */;
 
       maxWidth = width > maxWidth ? width : maxWidth;
 
-      if (offset < (objects.width() - 200)) {
-          $(this).css({
-            "position": "absolute",
-            "left": "" + offset + "px",
-            "visibility": "visible"
-          });
-      } else {
-          $(this).css({
-            "position": "absolute",
-            "left": "0px",
-            "visibility": "hidden"
-          });
+      if (offset < (tableWidth - width - 150)) {
+        e.style.position = "absolute";
+        e.style.left = "" + offset + "px";
+        e.style.visibility = "visible";
+      } else if (i > 1) {
+        e.style.position = "absolute";
+        e.style.left = "0";
+        e.style.visibility = "hidden";
       }
-    });
+    }
+
     offset += maxWidth;
   }
 }
@@ -313,7 +320,7 @@ corto.updateScope = function(data) {
 
   for (var i = 0; i < keys.length; i++) {
     k = keys[i];
-    columns = corto.findColumns([], '', types[k][0].value);
+    columns = corto.findColumns([], '', types[k][0].value).slice(0, 9);
     var typeStr = k[0] == '/' ? k.substring(1) : k;
     objects.append(t_objectTable({type: typeStr, objects: types[k], columns: columns, objectTemplate: t_object}))
     componentHandler.upgradeElement(document.getElementById(typeStr + '-object-table'));
@@ -325,6 +332,7 @@ corto.updateScope = function(data) {
   });
 
   corto.updateColumns();
+  $('.toggle-scope-container').hide();
 }
 
 // Set parent
@@ -332,10 +340,17 @@ corto.updateParent = function(id) {
   $("#navigator").html(corto.linkSplitUp(id));
 }
 
+corto.clear = function() {
+  $("#objectViews").empty();
+}
+corto.clearAll = function() {
+  corto.clear();
+  $("#admin-objects").empty();
+}
+
 // Request a value
 corto.requestValue = function(parent, id) {
-  $("#meta").html(t_metaTable({id: id, name: "", type: "", owner: ""}));
-  $("#value").html(t_valueTableLoading({}));
+  corto.clear();
 
   if (id != undefined) {
     $.get("http://" + window.location.host +
@@ -349,9 +364,64 @@ corto.requestValue = function(parent, id) {
 }
 
 // Query handler
-corto.search = function(e){
-    corto.delay(function(){corto.request(corto.parent, $('#search').val() + '*')}, 500);
+corto.search = function(event){
+    corto.query = "";
+    var q = event.target.value;
+    var typeFilter = "";
+    var idFilter = "?select=*";
+
+    // Parse query
+    elems = q.split("&") /*.replace(/ /g,'')*/
+    for (var i = 0; i < elems.length; i ++) {
+      var e = elems[i];
+      if (e.substr(0,1) == ':') {
+        if (e.substr(1, 5) == "type=") {
+          typeFilter = "&type=" + e.substr(6, e.length);
+        }
+      } else {
+        idFilter = "?select=" + e + '*';
+      }
+    }
+
+    corto.query = idFilter + typeFilter;
+
+    if (event.keyCode == 13) {
+      corto.request(corto.parent, corto.query);
+    } else {
+      corto.delay(function(){
+        corto.request(corto.parent, corto.query);
+      }, 1000);
+    }
+
     return false;
+}
+
+// Inline scope view
+corto.toggleScope = function(id) {
+  var elem = $('#row-' + id);
+  if (elem.hasClass('toggle-scope')) {
+    var e = $('#toggle-scope-' + id);
+    e.empty();
+    e.height(0);
+    corto.delay(function(){e.hide()}, 280);
+    elem.removeClass('toggle-scope');
+  } else {
+    elem.addClass('toggle-scope');
+    $.get("http://" + window.location.host +
+      "/api" + corto.parent + "?select=" + id + "/*&meta=true",
+      function(data) {
+        if (data.length) {
+          var e = $('#toggle-scope-' + id);
+          e.show();
+          e.height((data.length / 2) * 25 + 90);
+          corto.delay(function(){
+            e.html(
+              t_inlineScope({elementTemplate: t_inlineScopeElement, objects: data}
+            ));
+          }, 280);
+        }
+      });
+  }
 }
 
 // Request a scope
@@ -367,9 +437,11 @@ corto.refresh = function(id, query) {
   var q = "*";
   if (query != undefined) {
       q = query;
+  } else {
+      q = "?select=*"
   }
   $.get("http://" + window.location.host +
-    "/api" + id + "?select=" + q + "&meta=true&value=true&offset=" +
+    "/api" + id + q + "&meta=true&value=true&offset=" +
         ((corto.page - 1) * corto.itemsPerPage) + "&limit=" + corto.itemsPerPage,
         corto.updateScope);
 }
@@ -399,11 +471,12 @@ corto.updatePage = function() {
 // Document.ready
 $(function() {
 
+corto.WidthTool = document.getElementById("Test");
+corto.adminObjects = document.getElementById("admin-objects");
+
 $( window ).resize(function() {
   corto.updateColumns();
 });
-
-
 
 // Code to select row-checkboxes when header checkbox is clicked
 corto.objectViews = document.querySelector('#admin-objectViews');

@@ -43,8 +43,6 @@ table {
   border: 1px rgba(0, 0, 0, 0.14) solid;
 }
 td {
-  border-top: 1px rgba(0, 0, 0, 0.07) solid;
-  border-collapse: collapse;
   padding-top: 12px;
   padding-bottom: 12px;
   padding-left: 10px;
@@ -69,7 +67,17 @@ td p {
   margin: 0px;
 }
 tr {
-  transition: all 0.28s, cubic-bezier(.4,0,.2,1);;
+  border-top: 1px rgba(0, 0, 0, 0.07) solid;
+  border-collapse: collapse;
+  cursor: pointer;
+}
+.toggle-scope-container {
+  border: none;
+  -webkit-transition: all 0.28s cubic-bezier(.4,0,.2,1);
+  -moz-transition: all 0.28s cubic-bezier(.4,0,.2,1);
+  -o-transition: all 0.28s cubic-bezier(.4,0,.2,1);
+  transition: all 0.28s cubic-bezier(.4,0,.2,1);
+  height: 0px;
 }
 tr.material-icons {
   color: inherit !important;
@@ -99,8 +107,7 @@ button.admin-wnd-button i {
   font-size: 16px;
 }
 button.admin-wnd-button {
-  margin-right: 10px;
-  margin-top: 10px;
+  margin-top: 5px;
 }
 span.admin-type {
   color: rgb(0, 188, 212);
@@ -115,25 +122,13 @@ td.admin-property {
   color: #999;
 }
 .admin-columnValue {
+  position: absolute;
   text-align: center !important;
   color: #999 !important;
   padding-top: 4px;
 }
 
 span.tbl-column-1 { position: absolute; left: 70px; }
-/*
-@media (min-width: 400px){span.tbl-column-2 {position: absolute; left: 250px; visibility: visible;}}
-@media (min-width: 550px){span.tbl-column-3 {position: absolute; left: 400px; visibility: visible;}}
-@media (min-width: 700px){span.tbl-column-4 {position: absolute; left: 550px; visibility: visible;}}
-@media (min-width: 850px){span.tbl-column-5 {position: absolute; left: 700px; visibility: visible;}}
-@media (min-width: 1000px){span.tbl-column-6 {position: absolute; left: 850px; visibility: visible;}}
-@media (min-width: 1150px){span.tbl-column-7 {position: absolute; left: 1000px; visibility: visible;}}
-@media (min-width: 1300px){span.tbl-column-8 {position: absolute; left: 1150px; visibility: visible;}}
-@media (min-width: 1450px){span.tbl-column-9 {position: absolute; left: 1300px; visibility: visible;}}
-@media (min-width: 1600px){span.tbl-column-10 {position: absolute; left: 1450px; visibility: visible;}}
-@media (min-width: 1750px){span.tbl-column-11 {position: absolute; left: 1600px; visibility: visible;}}
-@media (min-width: 1900px){span.tbl-column-12 {position: absolute; left: 1750px; visibility: visible;}}
-*/
 span.tbl-column-right {
   display: inline-block;;
   text-align: right;
@@ -334,6 +329,9 @@ _:-ms-input-placeholder, :root .admin-graph {
 
 .mdl-tabs {
   border: 1px rgba(0, 0, 0, 0.14) solid;
+}
+.mdl-menu {
+  padding: 20px;
 }
 #value-table {
   border: none;
