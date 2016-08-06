@@ -43,7 +43,7 @@ var t_inlineScopeElement = _.template($("#inlineScopeElement").html());
 // Initialize parent to root
 corto.parent = "";
 corto.page = 1;
-corto.itemsPerPage = 100;
+corto.itemsPerPage = 50;
 corto.numObjects = 0;
 corto.boxes = [];
 corto.table = {};
@@ -280,7 +280,7 @@ corto.updateColumns = function() {
 
       maxWidth = width > maxWidth ? width : maxWidth;
 
-      if (offset < (tableWidth - width - 150)) {
+      if (offset < (tableWidth - width - 50)) {
         e.style.position = "absolute";
         e.style.left = "" + offset + "px";
         e.style.visibility = "visible";
