@@ -114,7 +114,7 @@
         <% column = 0; %>
         <tr id="row-<%=id%>" data-parent="<%=parent%>" onclick="corto.toggleScope('<%=id%>')"><td style="vertical-align: middle; padding: 15px">
           <span class='tbl-column-<%=column++%>'>
-              <label class="mdl-checkbox mdl-js-checkbox mdl-js-ripple-effect mdl-data-table__select" for="check-<%=id%>" id="mdl-check-<%=id%>">
+              <label class="mdl-checkbox mdl-js-checkbox mdl-js-ripple-effect mdl-data-table__select" for="check-<%=id%>" id="mdl-check-<%=id%>" onclick="event.stopPropagation();">
                 <input type="checkbox" id="check-<%=id%>" class="mdl-checkbox__input" />
               </label>
           </span>
@@ -135,7 +135,7 @@
           <span class='tbl-column-right'>
             <button class="mdl-button mdl-js-button mdl-button--icon"><i class="mdl-color-text--blue-grey-400 material-icons admin-button" role="presentation">edit</i></button>
             <button class="mdl-button mdl-js-button mdl-button--icon">
-              <i class="mdl-color-text--blue-grey-400 material-icons admin-button" role="presentation" onClick="document.documentElement.scrollTop = 0; corto.request(corto.parent + '/<%=id%>');">subdirectory_arrow_right</i>
+              <i class="mdl-color-text--blue-grey-400 material-icons admin-button" role="presentation" onClick="document.documentElement.scrollTop = 0; corto.request(corto.parent + '/<%=id%>'); event.stopPropagation();">subdirectory_arrow_right</i>
             </button>
           </span>
         </td></tr>
