@@ -29,6 +29,7 @@ corto.json = {
   };
 
 // Compile templates
+var t_objectTableTabs = _.template($("#objectTableTabs").html());
 var t_objectTable = _.template($("#objectTable").html());
 var t_objectTableLoading = _.template($("#objectTableLoading").html());
 var t_object = _.template($("#object").html());
@@ -43,7 +44,7 @@ var t_inlineScopeElement = _.template($("#inlineScopeElement").html());
 // Initialize parent to root
 corto.parent = "";
 corto.page = 1;
-corto.itemsPerPage = 50;
+corto.itemsPerPage = 200;
 corto.numObjects = 0;
 corto.boxes = [];
 corto.table = {};
@@ -51,6 +52,11 @@ corto.objectViews = {};
 
 // Delayed execution of a task
 corto.timer = 0;
+
+corto.htmlId = function(str) {
+  return str.replace(/\//g, "_")
+}
+
 corto.delay = function(callback, delay) {
   clearTimeout(corto.timer);
   corto.timer = setTimeout(callback, delay);
@@ -122,7 +128,6 @@ corto.subscribe = function(id, parent) {
     viewer = corto.objectViews.querySelector('#viewer-tab-' + id);
     corto.updateTabs(viewer);
     corto.requestValue(parent, id);
-    corto.updateColumns();
   }
   if (corto.updatePaneWidth(1) == 0) {
     window.setTimeout(append, 280);
@@ -146,7 +151,7 @@ corto.unsubscribe = function(id) {
 }
 
 corto.checkHandler = function(event) {
-  row = event.target.parentNode.parentNode.parentNode.parentNode;
+  row = event.target.parentNode.parentNode.parentNode;
   var id = row.id.substring(4, row.id.length); /* strip row- */
   if (event.target.checked) {
     $(row).addClass("is-selected");
@@ -172,12 +177,9 @@ corto.updateCheckboxes = function() {
 
 // Update MDL tabs on dynamic updates
 corto.updateTabs = function(elem) {
-  var layout = document.querySelector('.mdl-layout');
-  var tabs = document.querySelectorAll('.mdl-tabs__tab');
-  var panels = document.querySelectorAll('.mdl-tabs__panel');
-
+  var tabs = document.querySelectorAll('.mdl-tabs');
   for (var i = 0; i < tabs.length; i++) {
-    new MaterialTabs(elem);
+    new MaterialTabs(tabs[i]);
   }
 }
 
@@ -264,74 +266,27 @@ corto.findColumns = function(columns, prefix, value) {
   return columns;
 }
 
-corto.updateColumns = function() {
-  var offset = 70;
-  var tableWidth = $(corto.adminObjects).width();
-  for (var i = 1; i < 11; i++) {
-    var maxWidth = 30;
-    elems = corto.adminObjects.querySelectorAll("span.tbl-column-" + i);
-    for (var j = 0; j < elems.length; j++) {
-      e = elems[j];
-
-      /* Determine width of text */
-      corto.WidthTool.style.fontSize = 14;
-      corto.WidthTool.textContent = e.textContent.trim();
-      width = (corto.WidthTool.clientWidth + 1) + 50 /* margin */;
-
-      maxWidth = width > maxWidth ? width : maxWidth;
-
-      if (offset < (tableWidth - width - 50)) {
-        e.style.position = "absolute";
-        e.style.left = "" + offset + "px";
-        e.style.visibility = "visible";
-      } else if (i > 1) {
-        e.style.position = "absolute";
-        e.style.left = "0";
-        e.style.visibility = "hidden";
-      }
-    }
-
-    offset += maxWidth;
-  }
-}
-
 // Populate scope table
 corto.updateScope = function(data) {
   corto.numObjects = data.length;
   corto.updatePage();
 
   var types = {};
-  var objects = $("#admin-objects");
+  var objectTable = $("#admin-objects");
 
-  for(var i = 0; i < data.length; i++) {
-    type = data[i].meta.type;
-    if (!(type in types)) {
-      types[type] = []
-    }
-    types[type].push(data[i]);
-  }
-  objects.html("");
+  objectTable.html(t_objectTableTabs({data: data, objectTemplate: t_object, tableTemplate: t_objectTable}));
 
-  var keys = [];
-  for (var k in types) {
-    keys.push(k);
-  }
-  keys.sort();
-
-  for (var i = 0; i < keys.length; i++) {
-    k = keys[i];
-    columns = corto.findColumns([], '', types[k][0].value).slice(0, 9);
-    var typeStr = k[0] == '/' ? k.substring(1) : k;
-    objects.append(t_objectTable({type: typeStr, objects: types[k], columns: columns, objectTemplate: t_object}))
-    componentHandler.upgradeElement(document.getElementById(typeStr + '-object-table'));
-  }
   corto.updateCheckboxes();
+  corto.updateTabs(objectTable[0]);
+
+  $(".mdl-js-data-table").each(function(){
+    componentHandler.upgradeElement(this);
+  });
 
   objects.find('[col-id$=-tooltip]').each(function(){
     componentHandler.upgradeElement(this);
   });
 
-  corto.updateColumns();
   $('.toggle-scope-container').hide();
 }
 
@@ -354,11 +309,11 @@ corto.requestValue = function(parent, id) {
 
   if (id != undefined) {
     $.get("http://" + window.location.host +
-      "/api" + parent + "?select=" + id + "&value=true&meta=true&augment=*",
+      "/api" + parent + "?select=" + id + "&value=true&meta=true&td=true",
       corto.updateValue);
   } else {
     $.get("http://" + window.location.host +
-      "/api" + parent + "?value=true&meta=true&augment=*",
+      "/api" + parent + "?value=true&meta=true&td=true",
       corto.updateValue);
   }
 }
@@ -441,7 +396,7 @@ corto.refresh = function(id, query) {
       q = "?select=*"
   }
   $.get("http://" + window.location.host +
-    "/api" + id + q + "&meta=true&value=true&offset=" +
+    "/api" + id + q + "&meta=true&value=true&td=true&offset=" +
         ((corto.page - 1) * corto.itemsPerPage) + "&limit=" + corto.itemsPerPage,
         corto.updateScope);
 }
@@ -473,10 +428,6 @@ $(function() {
 
 corto.WidthTool = document.getElementById("Test");
 corto.adminObjects = document.getElementById("admin-objects");
-
-$( window ).resize(function() {
-  corto.updateColumns();
-});
 
 // Code to select row-checkboxes when header checkbox is clicked
 corto.objectViews = document.querySelector('#admin-objectViews');

@@ -38,15 +38,15 @@ table {
   width: 100%;
   border-spacing: 0px;
   border-collapse: collapse;
-  margin: 0px;
+  margin-top: 5px;
   padding: 0px;
-  border: 1px rgba(0, 0, 0, 0.14) solid;
 }
 td {
   padding-top: 12px;
   padding-bottom: 12px;
   padding-left: 10px;
   padding-right: 10px;
+  vertical-align: middle !important;
 }
 th {
   padding-top: 12px;
@@ -88,7 +88,9 @@ tr.is-selected {
 tbody tr:hover {
   background-color: #f5f5f5;
 }
-
+div.object-table {
+  overflow-x: scroll;
+}
 span.object-table-title {
   position: relative;
   padding: 10px;
@@ -113,26 +115,25 @@ span.admin-type {
   color: rgb(0, 188, 212);
   font-size: 12px;
 }
-span.admin-member {
+th.admin-member {
   color: rgba(0, 0, 0, 0.870588);
-  height: 30px !important;
+  height: 50px !important;
+  padding-top: 20px;
+  padding-bottom: 0px !important;
+  text-align: left !important;
 }
 td.admin-property {
   text-align: right;
   color: #999;
 }
-.admin-columnValue {
-  position: absolute;
-  text-align: center !important;
+td.admin-columnValue {
   color: #999 !important;
   padding-top: 4px;
+  white-space: nowrap;
 }
 
-span.tbl-column-1 { position: absolute; left: 70px; }
-span.tbl-column-right {
-  display: inline-block;;
-  text-align: right;
-  width: calc(100% - 40px);
+td.tbl-column-right {
+  text-align: right !important;
 }
 
 .admin-layout .admin-header .mdl-textfield {
@@ -332,6 +333,11 @@ _:-ms-input-placeholder, :root .admin-graph {
 }
 .mdl-menu {
   padding: 20px;
+}
+.mdl-tabs__tab-bar {
+  white-space:nowrap !important;
+  overflow:hidden !important;
+  display:inline;
 }
 #value-table {
   border: none;

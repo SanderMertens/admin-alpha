@@ -47,10 +47,10 @@
     <!-- Remote files -->
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:regular,bold,italic,thin,light,bolditalic,black,medium&amp;lang=en">
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
-    <link rel="stylesheet" href="https://code.getmdl.io/1.1.3/material.cyan-light_blue.min.css">
+    <!--link rel="stylesheet" href="https://code.getmdl.io/1.1.3/material.cyan-light_blue.min.css"-->
 
     <!-- Local copies -->
-    <!--link rel="stylesheet" href="./css/material.cyan-light_blue.min.css">
+    <link rel="stylesheet" href="./css/material.cyan-light_blue.min.css">
     <link rel="stylesheet" href="./css/fonts.css"-->
 
     <!-- Local-only files -->
@@ -111,82 +111,97 @@
     </div>
 
     <script type="template/text" id="object">
-        <% column = 0; %>
-        <tr id="row-<%=id%>" data-parent="<%=parent%>" onclick="corto.toggleScope('<%=id%>')"><td style="vertical-align: middle; padding: 15px">
-          <span class='tbl-column-<%=column++%>'>
-              <label class="mdl-checkbox mdl-js-checkbox mdl-js-ripple-effect mdl-data-table__select" for="check-<%=id%>" id="mdl-check-<%=id%>" onclick="event.stopPropagation();">
-                <input type="checkbox" id="check-<%=id%>" class="mdl-checkbox__input" />
-              </label>
-          </span>
-          <%if (parent == ".") {%>
-            <span class='admin-columnValue tbl-column-<%=column++%>'><%= corto.truncate(name, 20) %></span>
-          <%} else {%>
-            <span class='admin-columnValue tbl-column-<%=column++%>'><%= corto.truncate(parent + '/' + name, 50) %></span>
-          <%}%>
-          <% _.each(columns, function(item, key, list) {%>
-            <span id='col-<%=id%>.<%=item%>' class='admin-columnValue tbl-column-<%=column++%>'><%=corto.resolveMember(value, item, true)%></span>
-            <%
-              var s = corto.resolveMember(value, item, false);
-              if (s != null) {%>
-                <div id='col-<%=id%>.<%=item%>-tooltip' class="mdl-tooltip" for="<%=id%>.<%=item%>"><%=s%></div>
-              <%}
-            %>
-          <%})%>
-          <span class='tbl-column-right'>
-            <button class="mdl-button mdl-js-button mdl-button--icon"><i class="mdl-color-text--blue-grey-400 material-icons admin-button" role="presentation">edit</i></button>
-            <button class="mdl-button mdl-js-button mdl-button--icon">
-              <i class="mdl-color-text--blue-grey-400 material-icons admin-button" role="presentation" onClick="document.documentElement.scrollTop = 0; corto.request(corto.parent + '/<%=id%>'); event.stopPropagation();">subdirectory_arrow_right</i>
-            </button>
-          </span>
-        </td></tr>
-        <tr id="toggle-scope-<%=id%>" class="toggle-scope-container"></tr>
+      <tr id="row-<%=id%>" data-parent="<%=parent%>" onclick="corto.toggleScope('<%=id%>')">
+        <td class='admin-columnValue'>
+          <label class="mdl-checkbox mdl-js-checkbox mdl-js-ripple-effect mdl-data-table__select" for="check-<%=id%>" id="mdl-check-<%=id%>" onclick="event.stopPropagation();">
+            <input type="checkbox" id="check-<%=id%>" class="mdl-checkbox__input" />
+          </label>
+        <%if (parent == ".") {%>
+          <%= corto.truncate(name, 20) %></td>
+        <%} else {%>
+          <%= corto.truncate(parent + '/' + name, 50) %></td>
+        <%}%>
+        <% _.each(columns, function(item, key, list) {%>
+          <td id='col-<%=id%>.<%=item%>' class='admin-columnValue'><%=corto.resolveMember(value, item, true)%></td>
+          <%
+            var s = corto.resolveMember(value, item, false);
+            if (s != null) {%>
+              <div id='col-<%=id%>.<%=item%>-tooltip' class="mdl-tooltip" for="<%=id%>.<%=item%>"><%=s%></div>
+            <%}
+          %>
+        <%})%>
+        <td class="tbl-column-right">
+          <button class="mdl-button mdl-js-button mdl-button--icon"><i class="mdl-color-text--blue-grey-400 material-icons admin-button" role="presentation">edit</i></button>
+          <button class="mdl-button mdl-js-button mdl-button--icon">
+            <i class="mdl-color-text--blue-grey-400 material-icons admin-button" role="presentation" onClick="document.documentElement.scrollTop = 0; corto.request(corto.parent + '/<%=id%>'); event.stopPropagation();">subdirectory_arrow_right</i>
+          </button>
+        </td>
+      </tr>
+      <tr id="toggle-scope-<%=id%>" class="toggle-scope-container"></tr>
+    </script>
+
+    <script type="template/text" id="objectTableTabs">
+      <div class="mdl-color--white mdl-cell mdl-cell--12-col">
+        <div class="mdl-tabs mdl-js-tabs mdl-js-ripple-effect" id="objects-tabs">
+          <div class="mdl-tabs__tab-bar">
+            <% i = 0; _.each(types, function(item, key, list) { isactive=i?"":"is-active"; i++; %>
+                <a
+                  id="objects-tab-<%=type%>"
+                  href="#table-tab-<%=corto.htmlId(key)%>"
+                  class="mdl-tabs__tab <%=isactive%>"
+                > <%=key%> (<%=item.length%>) </a>
+            <% }); %>
+          </div>
+          <% i = 0; _.each(types, function(item, key, list) {  isactive=i?"":"is-active"; i++; %>
+            <div class="mdl-tabs__panel <%=isactive%>" id="table-tab-<%=corto.htmlId(key)%>">
+              <%= tableTemplate({
+                  objects: item,
+                  columns: corto.findColumns([], '', item[0].value).slice(0, 9),
+                  objectTemplate: objectTemplate
+                })
+              %>
+            </div>
+          <% }); %>
+        </div>
+      </div>
     </script>
 
     <script type="template/text" id="objectTable">
       <% var column = 0 %>
-      <div class="mdl-grid mdl-grid--no-spacing mdl-cell--12-col">
-        <div class="mdl-grid mdl-grid--no-spacing mdl-cell--12-col">
-          <span class="object-table-title">
-            <%=type%> (<%=objects.length%>)
-          </span>
-          <table id="<%=type%>-object-table" class="mdl-js-data-table mdl-color--white ">
-          <thead>
-            <tr>
-              <th>
-              <span class='tbl-column-<%=column++%>'>
-                <label class="mdl-checkbox mdl-js-checkbox mdl-js-ripple-effect mdl-data-table__select" for="table-header">
-                  <input type="checkbox" id="table-header" class="mdl-checkbox__input" />
-                </label>
-              </span>
-              <span class='admin-member tbl-column-<%=column++%>'> name </span>
-              <% _.each(columns, function(item, key, list) {%>
-                <span class='admin-member tbl-column-<%=column++%>'><%=corto.lastMember(item)%></span>
-              <%})%>
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            <%
-              var i = 0;
-              if (objects.length) {
-              _.each(objects, function(item, key, list) {
-                i ++;
-              %>
-              <%= objectTemplate({
-                id: item.id,
-                name: (item.meta.name && (item.id != item.meta.name)) ? item.meta.name : item.id,
-                parent: item.meta.parent == undefined ? "." : item.meta.parent,
-                type: item.meta.type,
-                value: item.value,
-                columns: columns}) %>
-            <% }); } else { %>
-                <tr class="object"><td>No objects</td><td></td><td></td></tr>
-            <% }; %>
-          </tbody>
+          <table class="mdl-js-data-table mdl-color--white ">
+            <thead>
+              <tr>
+                <th class='admin-member'>
+                  <label class="mdl-checkbox mdl-js-checkbox mdl-js-ripple-effect mdl-data-table__select" for="table-header">
+                    <input type="checkbox" id="table-header" class="mdl-checkbox__input" />
+                  </label>
+                  name
+                </th>
+                <% _.each(columns, function(item, key, list) {%>
+                  <th class='admin-member'><%=corto.lastMember(item)%></th>
+                <%})%>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              <%
+                var i = 0;
+                if (objects.length) {
+                _.each(objects, function(item, key, list) {
+                  i ++;
+                %>
+                <%= objectTemplate({
+                    id: item.id,
+                    name: (item.meta.name && (item.id != item.meta.name)) ? item.meta.name : item.id,
+                    parent: item.meta.parent == undefined ? "." : item.meta.parent,
+                    type: item.meta.type,
+                    value: item.value,
+                    columns: columns}) %>
+              <% }); } else { %>
+                  <tr class="object"><td>No objects</td><td></td><td></td></tr>
+              <% }; %>
+            </tbody>
           </table>
-        </div>
-        <div class="admin-separator mdl-cell--1-col"></div>
-      </div>
     </script>
 
     <script type="template/text" id="property">
@@ -299,7 +314,7 @@
       <li><%=name%> &#8226; <%=corto.link(type, type)%></li>
     </script>
     <script type="template/text" id="inlineScope">
-      <td><table class="toggle-scope-container"><tr>
+      <td colspan="99"><table class="toggle-scope-container"><tr>
       <td>
         <ul>
         <%
