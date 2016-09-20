@@ -87,10 +87,10 @@
       </header>
       <div class="admin-drawer mdl-layout__drawer mdl-color--blue-grey-900 mdl-color-text--blue-grey-50">
         <nav class="mdl-navigation mdl-color--blue-grey-800 admin-navigation">
+          <a class="mdl-navigation__link" href=""><i id="admin-button-browse" class="mdl-color-text--blue-grey-400 material-icons" role="presentation">list</i></a>
           <a class="mdl-navigation__link" href=""><i id="admin-button-browse" class="mdl-color-text--blue-grey-400 material-icons" role="presentation">apps</i></a>
-          <a class="mdl-navigation__link" href=""><i id="admin-button-traffic" class="mdl-color-text--blue-grey-400 material-icons" role="presentation">swap_horiz</i></a>
-          <a class="mdl-navigation__link" href=""><i id="admin-button-trends" class="mdl-color-text--blue-grey-400 material-icons" role="presentation">equalizer</i></a>
-          <a class="mdl-navigation__link" href=""><i id="admin-button-events" class="mdl-color-text--blue-grey-400 material-icons mdl-badge mdl-badge--overlap" data-badge="15" role="presentation">notifications</i></a>
+          <!--a class="mdl-navigation__link" href=""><i id="admin-button-events" class="mdl-color-text--blue-grey-400 material-icons mdl-badge mdl-badge--overlap" data-badge="15" role="presentation">notifications</i></a-->
+          <a class="mdl-navigation__link" href=""><i id="admin-button-events" class="mdl-color-text--blue-grey-400 material-icons" role="presentation">code</i></a>
           <div class="mdl-tooltip" for="admin-button-browse">Browse</div>
           <div class="mdl-tooltip" for="admin-button-traffic">Traffic</div>
           <div class="mdl-tooltip" for="admin-button-trends">Trends</div>
@@ -111,7 +111,7 @@
     </div>
 
     <script type="template/text" id="object">
-      <tr id="row-<%=id%>" data-parent="<%=parent%>" onclick="corto.toggleScope('<%=id%>')">
+      <tr id="row-<%=id%>" data-parent="<%=parent == '.' ? '' : parent%>" onclick="corto.toggleScope('<%=id%>')">
         <td class='admin-columnValue'>
           <label class="mdl-checkbox mdl-js-checkbox mdl-js-ripple-effect mdl-data-table__select" for="check-<%=id%>" id="mdl-check-<%=id%>" onclick="event.stopPropagation();">
             <input type="checkbox" id="check-<%=id%>" class="mdl-checkbox__input" />
@@ -121,19 +121,19 @@
         <%} else {%>
           <%= corto.truncate(parent + '/' + name, 50) %></td>
         <%}%>
-        <% _.each(columns, function(item, key, list) {%>
+        <% for(var key in columns) { item = columns[key]; %>
           <td id='col-<%=id%>.<%=item%>' class='admin-columnValue'><%=corto.resolveMember(value, item, true)%></td>
           <%
-            var s = corto.resolveMember(value, item, false);
+            var s = corto.resolveMember(value, key, false);
             if (s != null) {%>
               <div id='col-<%=id%>.<%=item%>-tooltip' class="mdl-tooltip" for="<%=id%>.<%=item%>"><%=s%></div>
             <%}
           %>
-        <%})%>
+        <%}%>
         <td class="tbl-column-right">
           <button class="mdl-button mdl-js-button mdl-button--icon"><i class="mdl-color-text--blue-grey-400 material-icons admin-button" role="presentation">edit</i></button>
           <button class="mdl-button mdl-js-button mdl-button--icon">
-            <i class="mdl-color-text--blue-grey-400 material-icons admin-button" role="presentation" onClick="document.documentElement.scrollTop = 0; corto.request(corto.parent + '/<%=id%>'); event.stopPropagation();">subdirectory_arrow_right</i>
+            <i class="mdl-color-text--blue-grey-400 material-icons admin-button" role="presentation" onClick="document.documentElement.scrollTop = 0; corto.request('<%=parent == '.' ? '' : parent + '/'%><%=id%>'); event.stopPropagation();">subdirectory_arrow_right</i>
           </button>
         </td>
       </tr>
@@ -141,22 +141,22 @@
     </script>
 
     <script type="template/text" id="objectTableTabs">
-      <div class="mdl-color--white mdl-cell mdl-cell--12-col">
+      <div class="mdl-color--white mdl-cell mdl-cell--12-col is-casting-shadow">
         <div class="mdl-tabs mdl-js-tabs mdl-js-ripple-effect" id="objects-tabs">
           <div class="mdl-tabs__tab-bar">
             <% i = 0; _.each(types, function(item, key, list) { isactive=i?"":"is-active"; i++; %>
                 <a
-                  id="objects-tab-<%=type%>"
+                  id="objects-tab-<%=key%>"
                   href="#table-tab-<%=corto.htmlId(key)%>"
                   class="mdl-tabs__tab <%=isactive%>"
-                > <%=key%> (<%=item.length%>) </a>
+                > <%=key%> (<%=objects[key].length%>) </a>
             <% }); %>
           </div>
           <% i = 0; _.each(types, function(item, key, list) {  isactive=i?"":"is-active"; i++; %>
             <div class="mdl-tabs__panel <%=isactive%>" id="table-tab-<%=corto.htmlId(key)%>">
               <%= tableTemplate({
-                  objects: item,
-                  columns: corto.findColumns([], '', item[0].value).slice(0, 9),
+                  objects: objects[key],
+                  columns: corto.findColumns([], "", item),
                   objectTemplate: objectTemplate
                 })
               %>
@@ -177,9 +177,9 @@
                   </label>
                   name
                 </th>
-                <% _.each(columns, function(item, key, list) {%>
-                  <th class='admin-member'><%=corto.lastMember(item)%></th>
-                <%})%>
+                <% for(var key in columns) { item = columns[key]; key = Object.keys(item)[0] %>
+                  <th class='admin-member'><%=corto.lastMember(key)%></th>
+                <%}%>
                 <th></th>
               </tr>
             </thead>

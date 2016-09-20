@@ -62,6 +62,7 @@ th:first-of-type {
 td:first-of-type {
   text-align: left !important;
   padding-left: 15px !important;
+  font-weight: 500;
 }
 td p {
   margin: 0px;
@@ -127,7 +128,7 @@ td.admin-property {
   color: #999;
 }
 td.admin-columnValue {
-  color: #999 !important;
+  color: rgba(0,0,0,.54) !important;
   padding-top: 4px;
   white-space: nowrap;
 }
@@ -344,6 +345,31 @@ _:-ms-input-placeholder, :root .admin-graph {
 }
 #meta-table {
   border: none;
+}
+
+span.content-binary {
+  color: #98c379;
+}
+span.content-bool {
+  color: #98c379;
+}
+span.content-char {
+  color: #98c379;
+}
+span.content-int {
+  color: #98c379;
+}
+span.content-uint {
+  color: #98c379;
+}
+span.content-text {
+  color: #d09965;
+}
+span.content-enum {
+  color: #c477db;
+}
+span.content-bitmask {
+  color: #c477db;
 }
 
 #Test {

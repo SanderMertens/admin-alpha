@@ -17,7 +17,7 @@ corto_int16 _admin_server_construct(
     corto_trace("admin: starting REST service", this->port);
 
     /* Serve up data */
-    this->api = server_RESTCreate(this->port, "api");
+    this->api = server_RESTCreate(this->port, "api", "/");
     if (!this->api) {
         goto error;
     }

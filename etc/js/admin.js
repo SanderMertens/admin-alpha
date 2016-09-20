@@ -79,12 +79,38 @@ corto.truncate = function(value, length) {
   }
 }
 
+CORTO_BINARY = 0,
+CORTO_BOOLEAN = 1,
+CORTO_CHARACTER = 2,
+CORTO_INTEGER = 3,
+CORTO_UINTEGER = 4,
+CORTO_FLOAT = 5,
+CORTO_TEXT = 6,
+CORTO_ENUM = 7,
+CORTO_BITMASK = 8
+
+corto.contentClass = function(type) {
+  switch (type) {
+  case 1: return "content-binary";
+  case 2: return "content-bool";
+  case 3: return "content-char";
+  case 4: return "content-int";
+  case 5: return "content-uint";
+  case 6: return "content-text";
+  case 7: return "content-enum";
+  case 8: return "content-bitmask";
+  case 9: return "admin-url";
+  }
+}
+
 corto.resolveMember = function(value, item, truncate) {
   if ((value != undefined) && !item || (value instanceof Object)) {
     result = value;
+    key = Object.keys(item)[0];
+    type = item[key];
 
     if (item) {
-      members = item.split(".");
+      members = key.split(".");
       for (var i = 1; i < members.length; i++) {
         result = result[members[i]];
       }
@@ -97,6 +123,10 @@ corto.resolveMember = function(value, item, truncate) {
     }
   } else if (!truncate) {
     result = null;
+  }
+
+  if (truncate) {
+      result = "<span class=" + corto.contentClass(type) + ">" + result + "</span>"
   }
 
   return result;
@@ -120,7 +150,7 @@ corto.subscribe = function(id, parent) {
   if (parent == "." || parent == undefined) {
     parent = corto.parent;
   }
-  console.log("subscribe for " + id + ", " + parent);
+
   append = function() {
     $(corto.objectViews).append(t_objectViewer({
       id: id
@@ -222,7 +252,7 @@ corto.updateValue = function(data) {
       name = data.meta.name;
   }
 
-  var owner
+  var owner;
   if (data.meta.owner == undefined) {
     owner = "me";
   } else {
@@ -254,7 +284,9 @@ corto.findColumns = function(columns, prefix, value) {
           columns = corto.findColumns(columns, prefix + '.' + c, v);
         }
       } else {
-        columns.push(prefix + '.' + c);
+        var obj = {}
+        obj[prefix + '.' + c] = v
+        columns.push(obj);
       }
     }
   }
@@ -268,13 +300,27 @@ corto.findColumns = function(columns, prefix, value) {
 
 // Populate scope table
 corto.updateScope = function(data) {
-  corto.numObjects = data.length;
+  if (data.o != undefined) {
+    corto.numObjects = data.o.length;
+  } else {
+    corto.numObjects = 0;
+  }
   corto.updatePage();
 
-  var types = {};
+  var sorted = {};
   var objectTable = $("#admin-objects");
 
-  objectTable.html(t_objectTableTabs({data: data, objectTemplate: t_object, tableTemplate: t_objectTable}));
+  if (data.o) {
+    for(var i = 0; i < data.o.length; i++) {
+      type = data.o[i].meta.type;
+      if (!(type in sorted)) {
+        sorted[type] = []
+      }
+      sorted[type].push(data.o[i]);
+    }
+  }
+
+  objectTable.html(t_objectTableTabs({objects: sorted, types: data.t, objectTemplate: t_object, tableTemplate: t_objectTable}));
 
   corto.updateCheckboxes();
   corto.updateTabs(objectTable[0]);
@@ -283,11 +329,14 @@ corto.updateScope = function(data) {
     componentHandler.upgradeElement(this);
   });
 
-  objects.find('[col-id$=-tooltip]').each(function(){
-    componentHandler.upgradeElement(this);
-  });
-
   $('.toggle-scope-container').hide();
+
+  if (!corto.numObjects) {
+    return;
+  }
+
+  corto.parent = corto.requestParent;
+  corto.updateParent(corto.parent);
 }
 
 // Set parent
@@ -324,6 +373,12 @@ corto.search = function(event){
     var q = event.target.value;
     var typeFilter = "";
     var idFilter = "?select=*";
+    var parent = corto.parent;
+
+    if (q[0] == "/") {
+        parent = "/";
+        q = q.substring(1);
+    }
 
     // Parse query
     elems = q.split("&") /*.replace(/ /g,'')*/
@@ -341,10 +396,10 @@ corto.search = function(event){
     corto.query = idFilter + typeFilter;
 
     if (event.keyCode == 13) {
-      corto.request(corto.parent, corto.query);
+      corto.request(parent, corto.query);
     } else {
       corto.delay(function(){
-        corto.request(corto.parent, corto.query);
+        corto.request(parent, corto.query);
       }, 1000);
     }
 
@@ -381,9 +436,17 @@ corto.toggleScope = function(id) {
 
 // Request a scope
 corto.request = function(id, query) {
-  corto.parent = id;
+  console.log("REQUEST: id = '" + id + "', query = '" + query + "', parent = '" + corto.parent + "'");
+  if (id[0] && id[0] != '/') {
+      id = corto.parent + "/" + id;
+  }
+  if (query && query[0] == '/') {
+      id = "/";
+      query = query.substring(1);
+  }
+
   $("#scope").html(t_objectTableLoading({}));
-  corto.updateParent(id);
+  corto.requestParent = id;
   corto.page = 1;
   corto.refresh(id, query);
 }
@@ -395,6 +458,7 @@ corto.refresh = function(id, query) {
   } else {
       q = "?select=*"
   }
+  corto.requestParent = id;
   $.get("http://" + window.location.host +
     "/api" + id + q + "&meta=true&value=true&td=true&offset=" +
         ((corto.page - 1) * corto.itemsPerPage) + "&limit=" + corto.itemsPerPage,
