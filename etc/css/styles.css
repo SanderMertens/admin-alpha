@@ -1,4 +1,6 @@
 /**
+ * LICENSE FROM USED TEMPLATE:
+ *
  * Copyright 2015 Google Inc. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -135,6 +137,7 @@ td.admin-columnValue {
 
 td.tbl-column-right {
   text-align: right !important;
+  white-space: nowrap;
 }
 
 .admin-layout .admin-header .mdl-textfield {
@@ -152,6 +155,7 @@ td.tbl-column-right {
 }
 .admin-button {
   color: rgb(0, 188, 212) !important;
+  font-size: 18px;
 }
 
 @media (min-width: 0px) {
@@ -372,10 +376,39 @@ span.content-bitmask {
   color: #c477db;
 }
 
+#overlay-disable-page {
+  position   : absolute;
+  top        : 0;
+  left       : 0;
+  width      : 100%;
+  height     : 100%;
+  background : #000;
+  opacity    : 0.6;
+  filter     : alpha(opacity=60);
+  z-index    : 5;
+  display    : none;
+}
+
+#dialog {
+  position : absolute;
+  top      : 0;
+  left     : 0;
+  width    : 100%;
+  height   : 100%;
+  z-index  : 10;
+  display  : none;
+}
+
+#dialogContent {
+  min-height: 0px !important;
+  min-width: 400px !important;
+}
+
+/* Used for testing width of text */
 #Test {
   position: absolute;
   visibility: hidden;
   height: auto;
   width: auto;
-  white-space: nowrap; /* Thanks to Herb Caudill comment */
+  white-space: nowrap;
 }

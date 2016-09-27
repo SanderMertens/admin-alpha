@@ -40,6 +40,8 @@ var t_metaTable = _.template($("#metaTable").html());
 var t_objectViewer = _.template($("#objectViewer").html());
 var t_inlineScope = _.template($("#inlineScope").html());
 var t_inlineScopeElement = _.template($("#inlineScopeElement").html());
+var t_dialogDelete = _.template($("#dialogDelete").html());
+var t_dialogFail = _.template($("#dialogFail").html());
 
 // Initialize parent to root
 corto.parent = "";
@@ -49,6 +51,7 @@ corto.numObjects = 0;
 corto.boxes = [];
 corto.table = {};
 corto.objectViews = {};
+corto.itemsChecked = [];
 
 // Delayed execution of a task
 corto.timer = 0;
@@ -64,7 +67,11 @@ corto.delay = function(callback, delay) {
 
 corto.lastMember = function(item) {
   items = item.split(".");
-  return items[items.length - 1];
+  result = items[items.length - 1];
+  if (!result.length) {
+      result = "value";
+  }
+  return result;
 }
 
 corto.truncate = function(value, length) {
@@ -79,16 +86,6 @@ corto.truncate = function(value, length) {
   }
 }
 
-CORTO_BINARY = 0,
-CORTO_BOOLEAN = 1,
-CORTO_CHARACTER = 2,
-CORTO_INTEGER = 3,
-CORTO_UINTEGER = 4,
-CORTO_FLOAT = 5,
-CORTO_TEXT = 6,
-CORTO_ENUM = 7,
-CORTO_BITMASK = 8
-
 corto.contentClass = function(type) {
   switch (type) {
   case 1: return "content-binary";
@@ -99,17 +96,18 @@ corto.contentClass = function(type) {
   case 6: return "content-text";
   case 7: return "content-enum";
   case 8: return "content-bitmask";
-  case 9: return "admin-url";
+  case 9: return "content-ref";
   }
 }
 
 corto.resolveMember = function(value, item, truncate) {
-  if ((value != undefined) && !item || (value instanceof Object)) {
+  if (value != undefined) {
     result = value;
+
     key = Object.keys(item)[0];
     type = item[key];
 
-    if (item) {
+    if (item && key.length) {
       members = key.split(".");
       for (var i = 1; i < members.length; i++) {
         result = result[members[i]];
@@ -117,9 +115,9 @@ corto.resolveMember = function(value, item, truncate) {
     }
   }
 
-  if (result && result.length > 20) {
+  if (result && result.length > 40) {
     if (truncate) {
-      result = corto.truncate(result, 20);
+      result = corto.truncate(result, 40);
     }
   } else if (!truncate) {
     result = null;
@@ -132,75 +130,74 @@ corto.resolveMember = function(value, item, truncate) {
   return result;
 }
 
-corto.updatePaneWidth = function(a) {
-  views = document.getElementById('admin-objectViews');
-  objects = document.getElementById('admin-objects');
-  if ((views.childElementCount + a) == 1) {
-    $(objects).removeClass('mdl-cell--12-col');
-    $(objects).addClass('mdl-cell--8-col');
-  } else if ((views.childElementCount + a) == 0) {
-    $(objects).removeClass('mdl-cell--8-col');
-    $(objects).addClass('mdl-cell--12-col');
-  }
-  componentHandler.upgradeElement(objects);
-  return views.childElementCount;
-}
-
-corto.subscribe = function(id, parent) {
-  if (parent == "." || parent == undefined) {
-    parent = corto.parent;
-  }
-
-  append = function() {
-    $(corto.objectViews).append(t_objectViewer({
-      id: id
-    }));
-    viewer = corto.objectViews.querySelector('#viewer-tab-' + id);
-    corto.updateTabs(viewer);
-    corto.requestValue(parent, id);
-  }
-  if (corto.updatePaneWidth(1) == 0) {
-    window.setTimeout(append, 280);
-  } else {
-    append();
-  }
-}
-
-corto.unsubscribe = function(id) {
-  $('#' + id + '-viewer').remove();
-  row = document.getElementById("row-" + id);
-  if (row) {
-    $(row).removeClass("is-selected");
-    checkbox = document.querySelector("#mdl-check-" + id);
-    if (checkbox) {
-      checkbox.MaterialCheckbox.uncheck()
-    }
-  }
-  corto.updatePaneWidth(0);
-  window.setTimeout(corto.updateColumns, 280);
-}
-
-corto.checkHandler = function(event) {
+// Function is called on checkbox
+corto.onCheckChange = function(event) {
   row = event.target.parentNode.parentNode.parentNode;
   var id = row.id.substring(4, row.id.length); /* strip row- */
+  var parent = corto.parent + "/" + row.dataset.parent;
+
   if (event.target.checked) {
     $(row).addClass("is-selected");
-    var parent = row.dataset.parent;
-    if (parent != '.') {
-      parent = '/' + parent;
-    }
-    corto.subscribe(id, parent);
+    corto.itemsChecked.push(parent + id);
   } else {
-    corto.unsubscribe(id);
+    $(row).removeClass("is-selected");
+    var index = jQuery.inArray(parent + id, corto.itemsChecked);
+    if (index != -1) {
+        corto.itemsChecked.splice(index, 1);
+    }
   }
 };
+
+corto.hideDialog = function() {
+  $('#overlay-disable-page, #dialog').fadeOut(100);
+}
+
+// Function is called on delete button
+corto.onDelete = function() {
+  var id = "";
+  var count = corto.itemsChecked.length;
+  if (count != 0) {
+    if (count == 1) {
+      id = corto.itemsChecked[0];
+    }
+    $("#dialogContent").html(t_dialogDelete(
+      {count: corto.itemsChecked.length, id: id}
+    ));
+    $('#overlay-disable-page, #dialog').fadeIn(100);
+  } else {
+    $("#dialogContent").html(t_dialogFail(
+      {msg: "No objects selected"}
+    ));
+    $('#overlay-disable-page, #dialog').fadeIn(100);
+  }
+}
+
+// Function is called when pressing OK on delete dialog
+corto.delete = function() {
+  expr = corto.itemsChecked.join(",");
+  console.log(expr);
+  $.ajax({
+    type: "DELETE",
+    url: "http://" + window.location.host + "/api",
+    data: "select=" + expr,
+    success: function(msg) {
+      corto.hideDialog();
+      corto.refresh();
+    },
+    fail: function(msg) {
+      $("#dialogContent").html(t_dialogFail(
+        {msg: msg}
+      ));
+    }
+  });
+}
 
 // Update MDL checkboxes on dynamic updates
 corto.updateCheckboxes = function() {
   $(".mdl-checkbox").each(function() {
     componentHandler.upgradeElement(this);
     input = this.querySelector('input');
-    input.addEventListener('change', corto.checkHandler)
+    input.addEventListener('change', corto.onCheckChange)
   });
   corto.boxes = document.querySelectorAll('tbody .mdl-data-table__select');
 }
@@ -274,21 +271,27 @@ corto.updateValue = function(data) {
 corto.findColumns = function(columns, prefix, value) {
   var superColumns = [];
 
-  for (var c in value) {
-    v = value[c];
-    if ((v != undefined) && !(v instanceof Array)) {
-      if (v instanceof Object) {
-        if (c == "super") {
-          superColumns = corto.findColumns(superColumns, prefix + '.' + c, v);
+  if (value instanceof Object) {
+    for (var c in value) {
+      v = value[c];
+      if ((v != undefined) && !(v instanceof Array)) {
+        if (v instanceof Object) {
+          if (c == "super") {
+            superColumns = corto.findColumns(superColumns, prefix + '.' + c, v);
+          } else {
+            columns = corto.findColumns(columns, prefix + '.' + c, v);
+          }
         } else {
-          columns = corto.findColumns(columns, prefix + '.' + c, v);
+          var obj = {};
+          obj[prefix + '.' + c] = v
+          columns.push(obj);
         }
-      } else {
-        var obj = {}
-        obj[prefix + '.' + c] = v
-        columns.push(obj);
       }
     }
+  } else {
+    var obj = {};
+    obj[""] = value;
+    columns.push(obj);
   }
 
   if (superColumns.length) {
@@ -375,9 +378,11 @@ corto.search = function(event){
     var idFilter = "?select=*";
     var parent = corto.parent;
 
-    if (q[0] == "/") {
+    if (q[0] == "/" && q[1] != "/") {
         parent = "/";
         q = q.substring(1);
+    } else if (q[0] == "/" && q[1] == "/") {
+        parent = "/";
     }
 
     // Parse query
@@ -436,11 +441,10 @@ corto.toggleScope = function(id) {
 
 // Request a scope
 corto.request = function(id, query) {
-  console.log("REQUEST: id = '" + id + "', query = '" + query + "', parent = '" + corto.parent + "'");
   if (id[0] && id[0] != '/') {
       id = corto.parent + "/" + id;
   }
-  if (query && query[0] == '/') {
+  if (query && query[0] == '/' && query[1] != '/') {
       id = "/";
       query = query.substring(1);
   }
@@ -458,6 +462,9 @@ corto.refresh = function(id, query) {
   } else {
       q = "?select=*"
   }
+  if (id == undefined) {
+    id = corto.parent;
+  }
   corto.requestParent = id;
   $.get("http://" + window.location.host +
     "/api" + id + q + "&meta=true&value=true&td=true&offset=" +
@@ -468,12 +475,13 @@ corto.refresh = function(id, query) {
 corto.navigate = function(nav) {
   if (((nav == -1) && (corto.page > 1)) || ((nav == 1) && (corto.numObjects == corto.itemsPerPage))) {
     corto.page += nav;
-    corto.refresh(corto.parent);
+    corto.refresh();
     corto.updatePage();
   }
 }
 
 corto.updatePage = function() {
+  corto.itemsChecked = [];
   $("#pageid").html("<p>" + corto.page + "</p>");
   if (corto.page == 1) {
     $("#pagearrowleft").hide();

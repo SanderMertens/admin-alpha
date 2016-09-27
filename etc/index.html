@@ -82,8 +82,16 @@
               <input class="mdl-textfield__input" type="text" id="search" onkeyup="corto.search(event)">
               <label class="mdl-textfield__label" for="search">Enter your query...</label>
             </div>
-          </div>
         </div>
+        <button class="mdl-button mdl-js-button mdl-button--icon">
+          <i class="material-icons" onClick="corto.onAdd()">add</i>
+        </button>
+        <button class="mdl-button mdl-js-button mdl-button--icon">
+          <i class="material-icons" onClick="corto.onEdit()">edit</i>
+        </button>
+        <label class="mdl-button mdl-js-button mdl-button--icon">
+          <i class="material-icons" onClick="corto.onDelete()">delete</i>
+        </label>
       </header>
       <div class="admin-drawer mdl-layout__drawer mdl-color--blue-grey-900 mdl-color-text--blue-grey-50">
         <nav class="mdl-navigation mdl-color--blue-grey-800 admin-navigation">
@@ -110,12 +118,60 @@
       </main>
     </div>
 
+    <div id="overlay-disable-page"></div>
+    <div id="dialog" onClick="corto.hideDialog()">
+      <div style="position: absolute; left: 50%; top: 30%">
+        <div style="position: relative; left: -50%; top: -70%;">
+          <div id="dialogContent" class="mdl-card mdl-shadow--8dp"></div>
+        </div>
+      </div>
+    </div>
+
+
+    <script type="template/text" id="dialogFail">
+        <div class="mdl-card__title">
+          Error
+        </div>
+        <div class="mdl-card__supporting-text">
+          <%=msg%>
+        </div>
+        <div class="mdl-card__actions mdl-card--border">
+          <button class="mdl-button mdl-button--colored mdl-js-button mdl-js-ripple-effect" onClick="corto.delete()">
+            OK
+          </button>
+        </div>
+    </script>
+    <script type="template/text" id="dialogDelete">
+        <div class="mdl-card__title">
+          Delete Object
+        </div>
+        <div class="mdl-card__supporting-text">
+          Are you sure you want to delete
+          <% if (count > 1) { %>
+            <b><%=count%> objects?</b>
+          <%} else {%>
+            <b><%=id%></b>?
+          <%}%>
+        </div>
+        <div class="mdl-card__actions mdl-card--border">
+          <button class="mdl-button mdl-button--colored mdl-js-button mdl-js-ripple-effect" onClick="corto.delete()">
+            OK
+          </button>
+          <button class="mdl-button mdl-button--colored mdl-js-button mdl-js-ripple-effect" onClick="corto.hideDialog()">
+            CANCEL
+          </button>
+        </div>
+    </script>
+
     <script type="template/text" id="object">
       <tr id="row-<%=id%>" data-parent="<%=parent == '.' ? '' : parent%>" onclick="corto.toggleScope('<%=id%>')">
         <td class='admin-columnValue'>
           <label class="mdl-checkbox mdl-js-checkbox mdl-js-ripple-effect mdl-data-table__select" for="check-<%=id%>" id="mdl-check-<%=id%>" onclick="event.stopPropagation();">
             <input type="checkbox" id="check-<%=id%>" class="mdl-checkbox__input" />
           </label>
+          <button class="mdl-button mdl-js-button mdl-button--icon">
+            <i class="mdl-color-text--blue-grey-400 material-icons admin-button" role="presentation" onClick="document.documentElement.scrollTop = 0; corto.request('<%=parent == '.' ? '' : parent + '/'%><%=id%>'); event.stopPropagation();">subdirectory_arrow_right</i>
+          </button>
         <%if (parent == ".") {%>
           <%= corto.truncate(name, 20) %></td>
         <%} else {%>
@@ -130,18 +186,12 @@
             <%}
           %>
         <%}%>
-        <td class="tbl-column-right">
-          <button class="mdl-button mdl-js-button mdl-button--icon"><i class="mdl-color-text--blue-grey-400 material-icons admin-button" role="presentation">edit</i></button>
-          <button class="mdl-button mdl-js-button mdl-button--icon">
-            <i class="mdl-color-text--blue-grey-400 material-icons admin-button" role="presentation" onClick="document.documentElement.scrollTop = 0; corto.request('<%=parent == '.' ? '' : parent + '/'%><%=id%>'); event.stopPropagation();">subdirectory_arrow_right</i>
-          </button>
-        </td>
       </tr>
       <tr id="toggle-scope-<%=id%>" class="toggle-scope-container"></tr>
     </script>
 
     <script type="template/text" id="objectTableTabs">
-      <div class="mdl-color--white mdl-cell mdl-cell--12-col is-casting-shadow">
+      <div class="mdl-color--white mdl-cell mdl-cell--12-col mdl-shadow--2dp">
         <div class="mdl-tabs mdl-js-tabs mdl-js-ripple-effect" id="objects-tabs">
           <div class="mdl-tabs__tab-bar">
             <% i = 0; _.each(types, function(item, key, list) { isactive=i?"":"is-active"; i++; %>
@@ -167,8 +217,11 @@
     </script>
 
     <script type="template/text" id="objectTable">
-      <% var column = 0 %>
-          <table class="mdl-js-data-table mdl-color--white ">
+      <% var column = 0; %>
+          <div class="mdl-cell mdl-cell--12-col">
+          <div class="mdl-card" style="width: inherit">
+          <div class="mdl-card__supporting-text" style="overflow: auto; width: inherit; height: inherit">
+          <table class="mdl-js-data-table mdl-color--white">
             <thead>
               <tr>
                 <th class='admin-member'>
@@ -180,7 +233,6 @@
                 <% for(var key in columns) { item = columns[key]; key = Object.keys(item)[0] %>
                   <th class='admin-member'><%=corto.lastMember(key)%></th>
                 <%}%>
-                <th></th>
               </tr>
             </thead>
             <tbody>
@@ -202,6 +254,9 @@
               <% }; %>
             </tbody>
           </table>
+          </div>
+          </div>
+          </div>
     </script>
 
     <script type="template/text" id="property">
