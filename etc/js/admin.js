@@ -40,10 +40,10 @@ var t_metaTable = _.template($("#metaTable").html());
 var t_objectViewer = _.template($("#objectViewer").html());
 var t_inlineScope = _.template($("#inlineScope").html());
 var t_inlineScopeElement = _.template($("#inlineScopeElement").html());
+var t_dialogEdit = _.template($("#dialogEdit").html());
 var t_dialogDelete = _.template($("#dialogDelete").html());
 var t_dialogFail = _.template($("#dialogFail").html());
 
-// Initialize parent to root
 corto.parent = "";
 corto.page = 1;
 corto.itemsPerPage = 200;
@@ -52,6 +52,7 @@ corto.boxes = [];
 corto.table = {};
 corto.objectViews = {};
 corto.itemsChecked = [];
+corto.data = {};
 
 // Delayed execution of a task
 corto.timer = 0;
@@ -63,6 +64,35 @@ corto.htmlId = function(str) {
 corto.delay = function(callback, delay) {
   clearTimeout(corto.timer);
   corto.timer = setTimeout(callback, delay);
+}
+
+corto.findTypeInLocalDb = function(id) {
+  for (var key in corto.data.t) {
+    if (key == id) {
+      return corto.data.t[key];
+    }
+  }
+}
+
+corto.findInLocalDb = function(id) {
+  if (id[0] != "/") {
+    id = "/" + id
+  }
+
+  for (var i = 0; i < corto.data.o.length; i ++) {
+    var dbId = corto.data.o[i].id;
+    if (corto.data.o[i].meta.parent != undefined) {
+      dbId = corto.data.o[i].meta.parent + "/" + dbId;
+    }
+    if (corto.parent != "/") {
+      dbId = corto.parent + "/" + dbId;
+    } else {
+      dbId = corto.parent + dbId;
+    }
+    if (dbId == id) {
+      return corto.data.o[i];
+    }
+  }
 }
 
 corto.lastMember = function(item) {
@@ -88,11 +118,12 @@ corto.truncate = function(value, length) {
 
 corto.contentClass = function(type) {
   switch (type) {
-  case 1: return "content-binary";
-  case 2: return "content-bool";
-  case 3: return "content-char";
-  case 4: return "content-int";
-  case 5: return "content-uint";
+  case 0: return "content-binary";
+  case 1: return "content-bool";
+  case 2: return "content-char";
+  case 3: return "content-int";
+  case 4: return "content-uint";
+  case 5: return "content-float";
   case 6: return "content-text";
   case 7: return "content-enum";
   case 8: return "content-bitmask";
@@ -100,7 +131,38 @@ corto.contentClass = function(type) {
   }
 }
 
-corto.resolveMember = function(value, item, truncate) {
+corto.contentRegexp = function(type) {
+  var identifier = "[a-zA-Z_][a-zA-Z_0-9]*"
+  switch (type) {
+  case 0: /* binary */ return "[0-9]+";
+  case 3: /* int */    return "-?[0-9]+";
+  case 4: /* uint */   return "[0-9]+";
+  case 1: /* bool */   return "true|false";
+  case 2: /* char */   return ".";
+  case 5: /* float */  return "[-+]?[0-9]*\.?[0-9]+";
+  case 6: /* string */ return undefined;
+  case 7: /* enum */   return identifier;
+  case 8: /* bitmask */return identifier + "([\|]" + identifier + ")*";
+  case 9: /* ref */    return "/?" + identifier + "(\/" + identifier + ")*";
+  }
+}
+
+corto.contentName = function(type) {
+  switch (type) {
+  case 3: /* int */    return "number";
+  case 4: /* uint */
+  case 0: /* binary */ return "unsigned number";
+  case 1: /* bool */   return "boolean";
+  case 2: /* char */   return "character";
+  case 5: /* float */  return "floating point number";
+  case 6: /* string */ return "string";
+  case 7: /* enum */   return "enumeration";
+  case 8: /* bitmask */return "bitmask";
+  case 9: /* ref */    return "reference";
+  }
+}
+
+corto.resolveMember = function(value, item, truncate, embed) {
   if (value != undefined) {
     result = value;
 
@@ -120,7 +182,9 @@ corto.resolveMember = function(value, item, truncate) {
       result = corto.truncate(result, 40);
     }
   } else if (!truncate) {
-    result = null;
+    if (embed != true) {
+      result = null;
+    }
   }
 
   if (truncate) {
@@ -130,20 +194,50 @@ corto.resolveMember = function(value, item, truncate) {
   return result;
 }
 
+corto.setMember = function(object, item, value) {
+  if (value != undefined) {
+    result = object;
+
+    key = Object.keys(item)[0];
+    type = item[key];
+
+    if (item && key.length) {
+      members = key.split(".");
+      for (var i = 1; i < members.length - 1; i++) {
+        result = result[members[i]];
+      }
+      result[members[i]] = value;
+    }
+  }
+}
+
 // Function is called on checkbox
 corto.onCheckChange = function(event) {
   row = event.target.parentNode.parentNode.parentNode;
   var id = row.id.substring(4, row.id.length); /* strip row- */
-  var parent = corto.parent + "/" + row.dataset.parent;
+  var parent = row.dataset.parent;
+  if (corto.parent != "/") {
+      parent = corto.parent + "/" + parent;
+  } else {
+      parent = "/" + parent;
+  }
+
+  if (parent.substr(parent.length - 1) != "/") {
+    parent += "/";
+  }
 
   if (event.target.checked) {
     $(row).addClass("is-selected");
     corto.itemsChecked.push(parent + id);
+    $("#admin-group-delete").show();
   } else {
     $(row).removeClass("is-selected");
     var index = jQuery.inArray(parent + id, corto.itemsChecked);
     if (index != -1) {
         corto.itemsChecked.splice(index, 1);
+    }
+    if (!corto.itemsChecked.length) {
+      $("#admin-group-delete").hide();
     }
   }
 };
@@ -152,30 +246,36 @@ corto.hideDialog = function() {
   $('#overlay-disable-page, #dialog').fadeOut(100);
 }
 
-// Function is called on delete button
-corto.onDelete = function() {
-  var id = "";
-  var count = corto.itemsChecked.length;
-  if (count != 0) {
-    if (count == 1) {
-      id = corto.itemsChecked[0];
+// Called when delete button is clicked
+corto.onDelete = function(expr) {
+  event.stopPropagation();
+
+  if (expr == undefined) {
+    var count = corto.itemsChecked.length;
+    if (count != 0) {
+      if (count == 1) {
+        expr = corto.itemsChecked[0];
+      }
+    } else {
+      $("#dialogContent").html(t_dialogFail(
+        {msg: "No objects selected"}
+      ));
+      $('#overlay-disable-page, #dialog').fadeIn(100);
     }
+  }
+  if (expr != undefined) {
     $("#dialogContent").html(t_dialogDelete(
-      {count: corto.itemsChecked.length, id: id}
-    ));
-    $('#overlay-disable-page, #dialog').fadeIn(100);
-  } else {
-    $("#dialogContent").html(t_dialogFail(
-      {msg: "No objects selected"}
+      {count: corto.itemsChecked.length, id: expr}
     ));
     $('#overlay-disable-page, #dialog').fadeIn(100);
   }
 }
 
-// Function is called when pressing OK on delete dialog
-corto.delete = function() {
-  expr = corto.itemsChecked.join(",");
-  console.log(expr);
+// Called when pressing OK on delete dialog
+corto.delete = function(expr) {
+  if (expr == undefined) {
+    expr = corto.itemsChecked.join(",");
+  }
   $.ajax({
     type: "DELETE",
     url: "http://" + window.location.host + "/api",
@@ -190,6 +290,36 @@ corto.delete = function() {
       ));
     }
   });
+}
+
+// Called when edit button is clicked
+corto.onEdit = function(expr) {
+  event.stopPropagation();
+  var object = corto.findInLocalDb(expr);
+  var type = corto.findTypeInLocalDb(object.meta.type);
+  $("#dialogContent").html(t_dialogEdit(
+    {object: object, type: corto.findColumns([], "", type)}
+  ));
+  corto.updateTextfields();
+  corto.updateSwitches();
+  $('#overlay-disable-page, #dialog').fadeIn(100);
+}
+
+// Called when pressing OK on edit dialog
+corto.edit = function(expr) {
+  var object = corto.findInLocalDb(expr);
+  $(".edit_input").each(function() {
+    corto.setMember(object, this.getAttribute('id').substr(5), this.value);
+  });
+  console.log(object);
+}
+
+corto.showHoverButtons = function(row) {
+  $(row).find(".admin-button-hover").show();
+}
+
+corto.hideHoverButtons = function(row) {
+  $(row).find(".admin-button-hover").hide();
 }
 
 // Update MDL checkboxes on dynamic updates
@@ -208,6 +338,20 @@ corto.updateTabs = function(elem) {
   for (var i = 0; i < tabs.length; i++) {
     new MaterialTabs(tabs[i]);
   }
+}
+
+// Update textfields on dynamic updates
+corto.updateTextfields = function() {
+  $(".mdl-textfield").each(function() {
+    componentHandler.upgradeElement(this);
+  });
+}
+
+// Update switches on dynamic updates
+corto.updateSwitches = function() {
+  $(".mdl-switch").each(function() {
+    componentHandler.upgradeElement(this);
+  });
 }
 
 // Translate identifier to link
@@ -235,37 +379,6 @@ corto.linkSplitUp = function(name) {
   });
 
   return result;
-}
-
-// Populate value table
-corto.updateValue = function(data) {
-  $("#meta-" + data.id).html(t_metaTable({id: "", name: "", type: "", owner: ""}));
-  $("#value-" + data.id).html(t_valueTable({value: {}, augments: undefined, property: t_property}));
-
-  var name;
-  if (data.meta.name == null || data.meta.name == undefined || !data.meta.name.length ) {
-      name = data.id;
-  } else {
-      name = data.meta.name;
-  }
-
-  var owner;
-  if (data.meta.owner == undefined) {
-    owner = "me";
-  } else {
-    owner = data.meta.owner;
-  }
-
-  $("#object-table-title-" + data.id).html(name);
-  $("#meta-" + data.id).html(t_metaTable({id: data.id, name: name, type: data.meta.type, owner: owner}));
-  if ((data.value != undefined) && (data.value != null) && (Object.keys(data.value).length)) {
-    $("#value-" + data.id).html(t_valueTable({value: data.value, augments: data.augments, property: t_property}));
-  } else {
-    dataLink = corto.objectViews.querySelector('#viewer-link-data-' + data.id);
-    metaLink = corto.objectViews.querySelector('#viewer-link-meta-' + data.id);
-    metaLink.click()
-    $(dataLink).css({"color": "#eeeeee"});
-  }
 }
 
 corto.findColumns = function(columns, prefix, value) {
@@ -323,6 +436,14 @@ corto.updateScope = function(data) {
     }
   }
 
+  if (!corto.numObjects) {
+    return;
+  }
+
+  corto.parent = corto.requestParent;
+  corto.updateParent(corto.parent);
+  corto.data = data;
+
   objectTable.html(t_objectTableTabs({objects: sorted, types: data.t, objectTemplate: t_object, tableTemplate: t_objectTable}));
 
   corto.updateCheckboxes();
@@ -333,13 +454,8 @@ corto.updateScope = function(data) {
   });
 
   $('.toggle-scope-container').hide();
-
-  if (!corto.numObjects) {
-    return;
-  }
-
-  corto.parent = corto.requestParent;
-  corto.updateParent(corto.parent);
+  $(".admin-button-hover").hide();
+  $(".admin-group-delete").hide();
 }
 
 // Set parent
@@ -353,21 +469,6 @@ corto.clear = function() {
 corto.clearAll = function() {
   corto.clear();
   $("#admin-objects").empty();
-}
-
-// Request a value
-corto.requestValue = function(parent, id) {
-  corto.clear();
-
-  if (id != undefined) {
-    $.get("http://" + window.location.host +
-      "/api" + parent + "?select=" + id + "&value=true&meta=true&td=true",
-      corto.updateValue);
-  } else {
-    $.get("http://" + window.location.host +
-      "/api" + parent + "?value=true&meta=true&td=true",
-      corto.updateValue);
-  }
 }
 
 // Query handler
@@ -439,11 +540,18 @@ corto.toggleScope = function(id) {
   }
 }
 
-// Request a scope
-corto.request = function(id, query) {
+corto.id = function(parent, id) {
+  if (parent && parent != ".") {
+    id = parent + "/" + id;
+  }
   if (id[0] && id[0] != '/') {
       id = corto.parent + "/" + id;
   }
+  return id;
+}
+
+// Request a scope
+corto.request = function(id, query) {
   if (query && query[0] == '/' && query[1] != '/') {
       id = "/";
       query = query.substring(1);

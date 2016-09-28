@@ -24,6 +24,10 @@ html, body {
   letter-spacing: 1px;
 }
 
+.mdl-textfield__input {
+  font-family: 'Roboto', 'Helvetica', sans-serif !important;
+}
+
 a, .admin-url {
   color: rgb(0, 188, 212);
   cursor: pointer;
@@ -88,6 +92,7 @@ tr.material-icons {
 tr.is-selected {
   background-color: #fafafa;
 }
+
 tbody tr:hover {
   background-color: #f5f5f5;
 }
@@ -155,6 +160,12 @@ td.tbl-column-right {
 }
 .admin-button {
   color: rgb(0, 188, 212) !important;
+  min-width: 24px !important;
+  width: 26px !important;
+  height: 26px !important;
+  font-size: 18px;
+}
+i.admin-button-hover {
   font-size: 18px;
 }
 
@@ -402,6 +413,11 @@ span.content-bitmask {
 #dialogContent {
   min-height: 0px !important;
   min-width: 400px !important;
+}
+
+.card-content {
+  max-height: 350px !important;
+  overflow: auto !important;
 }
 
 /* Used for testing width of text */

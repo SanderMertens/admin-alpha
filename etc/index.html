@@ -83,15 +83,6 @@
               <label class="mdl-textfield__label" for="search">Enter your query...</label>
             </div>
         </div>
-        <button class="mdl-button mdl-js-button mdl-button--icon">
-          <i class="material-icons" onClick="corto.onAdd()">add</i>
-        </button>
-        <button class="mdl-button mdl-js-button mdl-button--icon">
-          <i class="material-icons" onClick="corto.onEdit()">edit</i>
-        </button>
-        <label class="mdl-button mdl-js-button mdl-button--icon">
-          <i class="material-icons" onClick="corto.onDelete()">delete</i>
-        </label>
       </header>
       <div class="admin-drawer mdl-layout__drawer mdl-color--blue-grey-900 mdl-color-text--blue-grey-50">
         <nav class="mdl-navigation mdl-color--blue-grey-800 admin-navigation">
@@ -120,30 +111,71 @@
 
     <div id="overlay-disable-page"></div>
     <div id="dialog" onClick="corto.hideDialog()">
-      <div style="position: absolute; left: 50%; top: 30%">
-        <div style="position: relative; left: -50%; top: -70%;">
-          <div id="dialogContent" class="mdl-card mdl-shadow--8dp"></div>
+      <div style="position: absolute; left: 50%; top: 20%">
+        <div style="position: relative; left: -50%; top: -80%;">
+          <div id="dialogContent" class="mdl-card mdl-shadow--8dp" onClick="event.stopPropagation()"></div>
         </div>
       </div>
     </div>
 
-
     <script type="template/text" id="dialogFail">
         <div class="mdl-card__title">
-          Error
+          ERROR
         </div>
         <div class="mdl-card__supporting-text">
           <%=msg%>
         </div>
         <div class="mdl-card__actions mdl-card--border">
-          <button class="mdl-button mdl-button--colored mdl-js-button mdl-js-ripple-effect" onClick="corto.delete()">
+          <button class="mdl-button mdl-button--colored mdl-js-button mdl-js-ripple-effect" onClick="corto.hideDialog()">
             OK
           </button>
         </div>
     </script>
+
+    <script type="template/text" id="dialogEdit">
+        <div class="mdl-card__title">
+           EDIT <%= object.id %>
+        </div>
+        <div class="mdl-card__supporting-text card-content">
+          <form action="#">
+          <% for(var key in type) { item = type[key]; key = Object.keys(item)[0] %>
+            <% var property = corto.lastMember(key); %>
+            <% if (item[key] == 1) {%>
+              <label class="mdl-switch mdl-js-switch mdl-js-ripple-effect" for="edit_<%=key%>">
+                <input type="checkbox" id="edit_<%=key%>" class="mdl-switch__input edit_input" checked>
+                <span class="mdl-switch__label"><%=property%></span>
+              </label>
+            <%} else {%>
+              <% var pattern = corto.contentRegexp(item[key]); %>
+              <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+                  <input
+                    class="mdl-textfield__input edit_input"
+                    type="text"
+                    id="edit_<%=key%>"
+              <% if (pattern != undefined) { %>
+                    pattern="<%=pattern%>"
+              <% } %>
+                    value="<%=corto.resolveMember(object.value, item, false, true)%>">
+                  <label class="mdl-textfield__label" for="edit_<%=key%>"><%=property%></label>
+                  <span class="mdl-textfield__error">Input is not a valid <%=corto.contentName(item[key])%>!</span>
+              </div>
+            <%}%>
+          <%}%>
+          </form>
+        </div>
+        <div class="mdl-card__actions mdl-card--border">
+          <button class="mdl-button mdl-button--colored mdl-js-button mdl-js-ripple-effect" onClick="corto.edit('<%=corto.id(object.meta.parent, object.id)%>')">
+            UPDATE
+          </button>
+          <button class="mdl-button mdl-button--colored mdl-js-button mdl-js-ripple-effect" onClick="corto.hideDialog()">
+            CANCEL
+          </button>
+        </div>
+    </script>
+
     <script type="template/text" id="dialogDelete">
         <div class="mdl-card__title">
-          Delete Object
+          DELETE
         </div>
         <div class="mdl-card__supporting-text">
           Are you sure you want to delete
@@ -154,7 +186,7 @@
           <%}%>
         </div>
         <div class="mdl-card__actions mdl-card--border">
-          <button class="mdl-button mdl-button--colored mdl-js-button mdl-js-ripple-effect" onClick="corto.delete()">
+          <button class="mdl-button mdl-button--colored mdl-js-button mdl-js-ripple-effect" onClick="corto.delete('<%=id%>')">
             OK
           </button>
           <button class="mdl-button mdl-button--colored mdl-js-button mdl-js-ripple-effect" onClick="corto.hideDialog()">
@@ -164,19 +196,31 @@
     </script>
 
     <script type="template/text" id="object">
-      <tr id="row-<%=id%>" data-parent="<%=parent == '.' ? '' : parent%>" onclick="corto.toggleScope('<%=id%>')">
+      <tr
+        id="row-<%=id%>"
+        data-parent="<%=parent == '.' ? '' : parent%>"
+        onclick="corto.toggleScope('<%=id%>')"
+        onmouseover="corto.showHoverButtons(this)"
+        onmouseout="corto.hideHoverButtons(this)">
         <td class='admin-columnValue'>
           <label class="mdl-checkbox mdl-js-checkbox mdl-js-ripple-effect mdl-data-table__select" for="check-<%=id%>" id="mdl-check-<%=id%>" onclick="event.stopPropagation();">
             <input type="checkbox" id="check-<%=id%>" class="mdl-checkbox__input" />
           </label>
-          <button class="mdl-button mdl-js-button mdl-button--icon">
-            <i class="mdl-color-text--blue-grey-400 material-icons admin-button" role="presentation" onClick="document.documentElement.scrollTop = 0; corto.request('<%=parent == '.' ? '' : parent + '/'%><%=id%>'); event.stopPropagation();">subdirectory_arrow_right</i>
+          <button class="mdl-button mdl-js-button mdl-button--icon admin-button">
+            <i class="mdl-color-text--blue-grey-400 material-icons admin-button" role="presentation" onClick="corto.request('<%=corto.id(parent, id)%>'); event.stopPropagation();">subdirectory_arrow_right</i>
           </button>
         <%if (parent == ".") {%>
-          <%= corto.truncate(name, 20) %></td>
+          <%= corto.truncate(name, 20) %>
         <%} else {%>
-          <%= corto.truncate(parent + '/' + name, 50) %></td>
+          <%= corto.truncate(parent + '/' + name, 50) %>
         <%}%>
+          <button class="mdl-button mdl-js-button mdl-button--icon admin-button">
+            <i class="mdl-color-text--blue-grey-400 material-icons admin-button admin-button-hover" role="presentation" onClick="corto.onEdit('<%=corto.id(parent, id)%>')">edit</i>
+          </button>
+          <button class="mdl-button mdl-js-button mdl-button--icon admin-button">
+            <i class="mdl-color-text--blue-grey-400 material-icons admin-button admin-button-hover" role="presentation" onClick="corto.onDelete('<%=corto.id(parent, id)%>')">delete</i>
+          </button>
+        </td>
         <% for(var key in columns) { item = columns[key]; %>
           <td id='col-<%=id%>.<%=item%>' class='admin-columnValue'><%=corto.resolveMember(value, item, true)%></td>
           <%
@@ -228,7 +272,12 @@
                   <label class="mdl-checkbox mdl-js-checkbox mdl-js-ripple-effect mdl-data-table__select" for="table-header">
                     <input type="checkbox" id="table-header" class="mdl-checkbox__input" />
                   </label>
-                  name
+                  <button class="mdl-button mdl-js-button mdl-button--icon admin-button">
+                    <i class="material-icons admin-button" onClick="corto.onAdd()">add</i>
+                  </button>
+                  <button class="mdl-button mdl-js-button mdl-button--icon admin-button admin-group-delete">
+                    <i class="material-icons admin-button" onClick="corto.onDelete()">delete</i>
+                  </button>
                 </th>
                 <% for(var key in columns) { item = columns[key]; key = Object.keys(item)[0] %>
                   <th class='admin-member'><%=corto.lastMember(key)%></th>
