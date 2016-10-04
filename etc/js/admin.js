@@ -30,6 +30,7 @@ corto.json = {
 
 // Compile templates
 var t_objectTableTabs = _.template($("#objectTableTabs").html());
+var t_objectTableEmpty = _.template($("#objectTableEmpty").html());
 var t_objectTable = _.template($("#objectTable").html());
 var t_objectTableLoading = _.template($("#objectTableLoading").html());
 var t_object = _.template($("#object").html());
@@ -194,19 +195,31 @@ corto.resolveMember = function(value, item, truncate, embed) {
   return result;
 }
 
-corto.setMember = function(object, item, value) {
+corto.setMember = function(object, member, value) {
   if (value != undefined) {
-    result = object;
+    result = object.value;
 
-    key = Object.keys(item)[0];
-    type = item[key];
-
-    if (item && key.length) {
-      members = key.split(".");
+    if (member) {
+      members = member.split(".");
       for (var i = 1; i < members.length - 1; i++) {
         result = result[members[i]];
       }
-      result[members[i]] = value;
+
+      var last = members[i];
+      if (typeof(result[last]) == "number") {
+        result[last] = Number.parseFloat(value);
+      } else if (typeof(result[last]) == "boolean") {
+        console.log(value);
+        if (value == "on") {
+          result[last] = true;
+        } else {
+          result[last] = false;
+        }
+      } else {
+        result[last] = value;
+      }
+    } else {
+      object.value = value;
     }
   }
 }
@@ -311,7 +324,20 @@ corto.edit = function(expr) {
   $(".edit_input").each(function() {
     corto.setMember(object, this.getAttribute('id').substr(5), this.value);
   });
-  console.log(object);
+  $.ajax({
+    type: "PUT",
+    url: "http://" + window.location.host + "/api",
+    data: "id=" + expr + "&value=" + JSON.stringify(object.value),
+    success: function(msg) {
+      corto.hideDialog();
+      corto.refresh();
+    },
+    fail: function(msg) {
+      $("#dialogContent").html(t_dialogFail(
+        {msg: msg}
+      ));
+    }
+  });
 }
 
 corto.showHoverButtons = function(row) {
@@ -338,6 +364,14 @@ corto.updateTabs = function(elem) {
   for (var i = 0; i < tabs.length; i++) {
     new MaterialTabs(tabs[i]);
   }
+
+  // Hack to get ripple effect to work on dynamic updates
+  $(".mdl-js-ripple-effect").each(function() {
+    componentHandler.upgradeElement(this);
+  });
+  $(".mdl-js-ripple-effect").each(function() {
+    componentHandler.upgradeElement(this);
+  });
 }
 
 // Update textfields on dynamic updates
@@ -355,9 +389,20 @@ corto.updateSwitches = function() {
 }
 
 // Translate identifier to link
-corto.link = function(ref, name) {
-  return "<a class=\"admin-url\" onclick=\"corto.request('" + ref + "')\">" +
+corto.link = function(ref, name, action) {
+  if (action == undefined) {
+    action = "";
+  }
+  return "<a class=\"admin-url\" onclick=\"" + action + "corto.request('" + ref + "')\">" +
     name + "</a>";
+}
+
+corto.enableNavSpinner = function() {
+  $("#admin-navigator-spinner").addClass("is-active");
+}
+
+corto.disableNavSpinner = function() {
+  $("#admin-navigator-spinner").removeClass("is-active");
 }
 
 corto.linkSplitUp = function(name) {
@@ -365,16 +410,16 @@ corto.linkSplitUp = function(name) {
 
   // First add root
   if (!name.length) {
-    result = corto.link("", "corto") + "://";
+    result = corto.link("", "corto", "corto.enableNavSpinner();") + "://";
   } else {
-    result = corto.link("", "corto") + ":/";
+    result = corto.link("", "corto", "corto.enableNavSpinner();") + ":/";
   }
 
   // Iterate over sections, add to link
   _.each(name.split("/"), function(item) {
     if (item.length) {
       link += "/" + item;
-      result += "/<span class='object-id'>" + corto.link(link, item) + "</span>";
+      result += "/<span class='object-id'>" + corto.link(link, item, "corto.enableNavSpinner();") + "</span>";
     }
   });
 
@@ -421,6 +466,8 @@ corto.updateScope = function(data) {
   } else {
     corto.numObjects = 0;
   }
+
+  corto.disableNavSpinner();
   corto.updatePage();
 
   var sorted = {};
@@ -436,18 +483,15 @@ corto.updateScope = function(data) {
     }
   }
 
-  if (!corto.numObjects) {
-    return;
-  }
-
   corto.parent = corto.requestParent;
   corto.updateParent(corto.parent);
   corto.data = data;
 
-  objectTable.html(t_objectTableTabs({objects: sorted, types: data.t, objectTemplate: t_object, tableTemplate: t_objectTable}));
-
-  corto.updateCheckboxes();
-  corto.updateTabs(objectTable[0]);
+  if (!corto.numObjects) {
+    objectTable.html(t_objectTableEmpty());
+  } else {
+    objectTable.html(t_objectTableTabs({objects: sorted, types: data.t, objectTemplate: t_object, tableTemplate: t_objectTable}));
+  }
 
   $(".mdl-js-data-table").each(function(){
     componentHandler.upgradeElement(this);
@@ -456,6 +500,22 @@ corto.updateScope = function(data) {
   $('.toggle-scope-container').hide();
   $(".admin-button-hover").hide();
   $(".admin-group-delete").hide();
+
+  corto.updateCheckboxes();
+  corto.updateTabs(objectTable[0]);
+}
+
+corto.request_w_spinner = function(obj, url) {
+  $(obj).html(
+    "<div class='mdl-spinner mdl-spinner--single-color mdl-js-spinner admin-button-loading is-active'></div>"
+  );
+
+  $("i.admin-button").fadeOut(200);
+  $(".mdl-spinner").each(function(){
+    componentHandler.upgradeElement(this);
+  });
+
+  corto.request(url);
 }
 
 // Set parent
@@ -557,7 +617,6 @@ corto.request = function(id, query) {
       query = query.substring(1);
   }
 
-  $("#scope").html(t_objectTableLoading({}));
   corto.requestParent = id;
   corto.page = 1;
   corto.refresh(id, query);
@@ -577,7 +636,12 @@ corto.refresh = function(id, query) {
   $.get("http://" + window.location.host +
     "/api" + id + q + "&meta=true&value=true&td=true&offset=" +
         ((corto.page - 1) * corto.itemsPerPage) + "&limit=" + corto.itemsPerPage,
-        corto.updateScope);
+        corto.updateScope
+      )
+  .fail(function(data) {
+    console.log( "request failed" );
+    console.log( data );
+  });
 }
 
 corto.navigate = function(nav) {
@@ -590,6 +654,7 @@ corto.navigate = function(nav) {
 
 corto.updatePage = function() {
   corto.itemsChecked = [];
+
   $("#pageid").html("<p>" + corto.page + "</p>");
   if (corto.page == 1) {
     $("#pagearrowleft").hide();
@@ -611,23 +676,6 @@ corto.adminObjects = document.getElementById("admin-objects");
 
 // Code to select row-checkboxes when header checkbox is clicked
 corto.objectViews = document.querySelector('#admin-objectViews');
-/*corto.table = document.querySelector('table');
-
-var headerCheckbox = corto.table.querySelector('thead input');
-var headerCheckHandler = function(event) {
-  if (event.target.checked) {
-    for (var i = 0, length = corto.boxes.length; i < length; i++) {
-      corto.boxes[i].MaterialCheckbox.check();
-      $(corto.boxes[i].parentNode.parentNode).addClass("is-selected");
-    }
-  } else {
-    for (var i = 0, length = corto.boxes.length; i < length; i++) {
-      corto.boxes[i].MaterialCheckbox.uncheck();
-      $(corto.boxes[i].parentNode.parentNode).removeClass("is-selected");
-    }
-  }
-};
-headerCheckbox.addEventListener('change', headerCheckHandler);*/
 
 // Initial request
 corto.request("");
