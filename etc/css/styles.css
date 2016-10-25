@@ -160,12 +160,24 @@ td.tbl-column-right {
 }
 
 .admin-layout-title {
-  font-family: inherit;
   padding-left: 5px;
 }
+
 i.admin-button {
   color: rgb(0, 188, 212) !important;
 }
+
+@media (min-width: 0px) {
+#admin-navigator-spinner {
+  margin-left: 45px;
+}
+}
+@media (min-width: 1023px) {
+#admin-navigator-spinner {
+  margin-left: 4px;
+}
+}
+
 div.admin-button-loading {
   width: 24px !important;
   height: 24px !important;
@@ -183,7 +195,7 @@ header.admin-header {
   width: 100% !important;
 }
 }
-@media (min-width: 1024px) {
+@media (min-width: 1023px) {
 main.admin-main {
   margin-left: 120px !important;
 }
