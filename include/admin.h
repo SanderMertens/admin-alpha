@@ -7,13 +7,15 @@
 #define CORTO_ADMIN_H
 
 #include <corto/corto.h>
-#include <corto/admin/_interface.h>
+#include <corto/admin/_project.h>
 #include <corto/web/server/server.h>
+#include <corto/core/c/c.h>
+#include <corto/lang/c/c.h>
 
 #include <corto/admin/_type.h>
-#include <corto/admin/_api.h>
-#include <corto/admin/_meta.h>
 
+#include <corto/admin/_api.h>
+#include <corto/admin/_load.h>
 #ifdef __cplusplus
 extern "C" {
 #endif
